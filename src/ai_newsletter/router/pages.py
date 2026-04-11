@@ -1,0 +1,93 @@
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.ai_newsletter.database.engine import get_db
+from src.ai_newsletter.services.digest import get_digest_by_id, get_digests
+from src.ai_newsletter.utils.dependencies import templates
+from src.ai_newsletter.utils.shared import estimate_read_time
+
+router = APIRouter()
+
+
+@router.get("/")
+async def home(request: Request):
+    # Get user from session
+    user = request.session.get("user")
+
+    return templates.TemplateResponse(
+        request=request, name="index.html", context={"user": user}
+    )
+
+
+@router.get("/dashboard")
+async def dashboard(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
+    user = request.session.get("user")
+    topic = request.query_params.get("topic", "")
+    if not user:
+        return RedirectResponse(url="/login/google")
+    all_digests = await get_digests(db, str(user["id"]))
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={
+            "request": request,
+            "user": user,
+            "items": all_digests,
+            "topic": topic,
+        },
+    )
+
+
+@router.get("/profile")
+async def profile(request: Request):
+    user = request.session.get("user")
+    user_settings = {
+        "deliveryTime": "08:00",
+        "emailNotifications": True,
+    }
+    return templates.TemplateResponse(
+        request=request,
+        name="profile.html",
+        context={"request": request, "user": user, "user_settings": user_settings},
+    )
+
+
+@router.get("/digests/{digest_id}")
+async def view_digest(
+    request: Request,
+    digest_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/login/google")
+
+    digest = await get_digest_by_id(
+        db,
+        digest_id=digest_id,
+        user_id=uuid.UUID(user["id"]),
+    )
+
+    if not digest:
+        return RedirectResponse(url="/dashboard")
+
+    web_info = digest.extra_data or []
+    source_count = len(web_info)
+    read_time = estimate_read_time(digest.content)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="final_read.html",
+        context={
+            "request": request,
+            "user": user,
+            "digest": digest,
+            "web_info": web_info,
+            "source": source_count,
+            "read_time": read_time,
+        },
+    )

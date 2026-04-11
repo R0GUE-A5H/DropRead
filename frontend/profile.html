@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-white selection:bg-slate-900 selection:text-white">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropRead | Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.011em;
+        }
+
+        .bg-grid {
+            background-image: radial-gradient(circle at 1px 1px, #f1f5f9 1.5px, transparent 0);
+            background-size: 32px 32px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="h-full antialiased bg-grid text-slate-900" x-data="settings()">
+
+
+    <header class="fixed top-0 inset-x-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
+        <nav class="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2.5 cursor-pointer" onclick="window.location.href='/'">
+                    <div class="h-6 w-6 bg-slate-900 rounded-md flex items-center justify-center shadow-sm">
+                        <svg class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="3.5">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <span class="font-extrabold text-sm tracking-tighter uppercase">DropRead</span>
+                </div>
+                <div class="h-4 w-px bg-slate-200 mx-1"></div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Settings</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="relative flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-[10px] font-bold text-slate-900 leading-none">{{ user.name }}</p>
+                        <p class="text-[8px] text-green-500 font-bold uppercase tracking-widest mt-1">Online</p>
+                    </div>
+                    <button @click="userMenuOpen = !userMenuOpen" @click.away="userMenuOpen = false"
+                        class="focus:outline-none">
+                        <img src="{{ user.picture }}" referrerpolicy="no-referrer"
+                            class="w-8 h-8 rounded-full border border-slate-200 shadow-sm hover:ring-2 hover:ring-slate-900 transition-all">
+                    </button>
+                    <div x-show="userMenuOpen" x-cloak x-transition
+                        class="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-200 shadow-xl py-2 z-50">
+                        <div class="px-4 py-2 border-b border-slate-50 mb-1">
+                            <p class="text-[9px] font-bold text-slate-400 lowercase tracking-tighter truncate">{{
+                                user.email }}</p>
+                        </div>
+                        <a href="/dashboard"
+                            class="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">My Topics</a>
+                        <hr class="my-1 border-slate-100">
+                        <a href="/logout"
+                            class="block px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-6 pt-28 pb-20">
+
+        <nav class="mb-10">
+            <a href="/dashboard"
+                class="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">
+                <svg class="h-3 w-3 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="4">
+                    <path d="M15 19l-7-7 7-7" />
+                </svg>
+                My Topics
+            </a>
+        </nav>
+
+        <header class="mb-10">
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">Settings</h1>
+            <p class="text-sm font-medium text-slate-500 mt-2">Manage your account and delivery preferences.</p>
+        </header>
+
+        <div class="space-y-8">
+
+
+            <section>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Account</h3>
+                <div
+                    class="bg-white border border-slate-200 rounded-[2rem] p-6 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <img src="{{ user.picture }}" referrerpolicy="no-referrer"
+                            class="w-10 h-10 rounded-full border border-slate-200">
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">{{ user.name }}</p>
+                            <p class="text-xs text-slate-500">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <a href="/logout"
+                        class="text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition">
+                        Sign Out
+                    </a>
+                </div>
+            </section>
+
+
+            <section>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Delivery</h3>
+                <div
+                    class="bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm divide-y divide-slate-100">
+
+                    <div class="p-6 flex items-center justify-between">
+                        <div class="max-w-sm">
+                            <p class="text-sm font-bold text-slate-900">Delivery time</p>
+                            <p class="text-xs text-slate-500 mt-1">When do you want your digest to arrive?</p>
+                        </div>
+                        <select x-model="current.delivery_time"
+                            class="appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-slate-900 outline-none cursor-pointer">
+                            <option value="08:00">8:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                        </select>
+                    </div>
+
+                    <div class="p-6 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">Email delivery</p>
+                            <p class="text-xs text-slate-500 mt-1">Send each digest to your inbox too.</p>
+                        </div>
+                        <button @click="current.email_notifications  = !current.email_notifications "
+                            :class="current.email_notifications ? 'bg-slate-900' : 'bg-slate-200'"
+                            class="h-6 w-11 rounded-full relative transition-colors duration-200 focus:outline-none flex-shrink-0">
+                            <span :class="current.email_notifications ? 'translate-x-6' : 'translate-x-1'"
+                                class="absolute left-0 top-1 h-4 w-4 bg-white rounded-full shadow-sm transition-transform duration-200">
+                            </span>
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <!-- <section>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Plan</h3>
+                <div class="bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm">
+                    <div class="p-6 flex items-center justify-between border-b border-slate-100">
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">Free plan</p>
+                            <p class="text-xs text-slate-500 mt-1">Up to 3 topics, weekly delivery.</p>
+                        </div>
+                        <span
+                            class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-full uppercase tracking-widest">
+                            Active
+                        </span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-slate-700">Topics used</span>
+                            <span class="text-xs font-mono text-slate-400">2 / 3</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-slate-900 h-full rounded-full" style="width: 66%"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-3">Need more topics? Upgrade to track unlimited topics
+                            and get daily digests.</p>
+                        <button
+                            class="mt-4 text-xs font-black text-slate-900 underline underline-offset-4 hover:text-slate-600 transition">
+                            Upgrade →
+                        </button>
+                    </div>
+                </div>
+            </section> -->
+            <section>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">DELETE ACCOUNT</h3>
+                <div class="bg-white border border-red-100 rounded-[2rem] p-6 shadow-sm">
+
+
+                    <div x-show="!showDeleteConfirm" class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">Delete account</p>
+                            <p class="text-xs text-slate-500 mt-1">Permanently removes your account and all topics.
+                                Cannot be undone.</p>
+                        </div>
+                        <button @click="showDeleteConfirm = true"
+                            class="text-[11px] font-black text-red-500 hover:text-red-700 uppercase tracking-widest transition">
+                            Delete
+                        </button>
+                    </div>
+
+
+                    <div x-show="showDeleteConfirm" x-transition
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-black text-slate-900">Are you sure?</p>
+                            <p class="text-xs text-slate-500 mt-1">This deletes your account and all topics permanently.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            <form method="POST" action="/api/user/deleteUser">
+                                <button type="submit"
+                                    class="px-4 py-2 bg-red-600 text-white text-xs font-black rounded-lg hover:bg-red-700 transition uppercase tracking-widest">
+                                    Yes, delete
+                                </button>
+                            </form>
+                            <button @click="showDeleteConfirm = false"
+                                class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <div x-show="isDirty" x-cloak x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
+                class="pt-4 flex justify-end gap-4 border-t border-slate-100">
+                <button @click="discard()" class="text-xs font-bold text-slate-400 hover:text-slate-900 transition">
+                    Discard
+                </button>
+                <button @click="save()"
+                    class="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition active:scale-95">
+                    Save
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function settings() {
+
+            return {
+                saved: { delivery_time: '08:00', email_notifications: true },
+                current: { delivery_time: '08:00', email_notifications: true },
+
+                userMenuOpen: false,
+                showDeleteConfirm: false,
+
+                loading: true, // currently in progress of fetching
+
+                async init() {
+                    console.log("Saving:", JSON.stringify(this.current))
+                    try {
+                        const res = await fetch('http://127.0.0.1:8000/api/user/getUserSettings')
+                        const data = await res.json()
+
+                        this.saved = { ...data }
+                        this.current = { ...data }
+                        console.log('Fetched user settings:', this.saved)
+                        console.log('Current user settings:', this.current)
+                        console.log("Data is ", data)
+                    } catch (error) {
+                        console.error('Error fetching user settings:', error)
+                    } finally {
+                        this.loading = false
+                    }
+
+                },
+
+                get isDirty() {
+                    return JSON.stringify(this.current) !== JSON.stringify(this.saved)
+                },
+
+                async save() {
+                    try {
+                        const res = await fetch('/api/user/updateSettings', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.current)
+                        })
+
+                        if (!res.ok) {
+                            throw new Error('Failed to save settings')
+                        }
+
+                        this.saved = { ...this.current }
+
+                    } catch (error) {
+                        console.error('Error saving user settings:', error)
+                    }
+                },
+
+                discard() {
+                    this.current = { ...this.saved }
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+{% if item.status == "running" %}
+<tr class="group hover:bg-slate-50/50 transition-all" id="row-{{ item.id }}" hx-get="/api/digests/{{ item.id }}/status"
+    hx-trigger="every 2s" hx-swap="outerHTML" hx-target="#row-{{ item.id }}">
+    {% else %}
+<tr class="group hover:bg-slate-50/50 transition-all">
+    {% endif %}
+    <td class="pl-10 pr-6 py-8">
+        <span class="text-base font-extrabold text-slate-900 tracking-tight block">{{ item.title | truncate(20)
+            }}</span>
+    </td>
+
+    <td class="px-6 py-8 max-w-sm">
+        {% if item.status == "running" %}
+        {% if item.current_step == "Generating search query..." %}
+        <span class="text-xs text-slate-400 italic flex items-center gap-2">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
+            ✨ Preparing search...
+        </span>
+        {% elif item.current_step == "Crawling Internet..." %}
+        <span class="text-xs text-slate-400 italic flex items-center gap-2">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
+            🔍 Searching the web...
+        </span>
+        {% elif item.current_step == "Searching Internet..." %}
+        <span class="text-xs text-slate-400 italic flex items-center gap-2">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
+            📖 Reading articles...
+        </span>
+        {% elif item.current_step == "Validating content..." %}
+        <span class="text-xs text-slate-400 italic flex items-center gap-2">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
+            🔎 Checking sources...
+        </span>
+        {% elif item.current_step == "Synthesis complete." %}
+        <span class="text-xs text-slate-400 italic flex items-center gap-2">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
+            ✍️ Writing your digest...
+        </span>
+        {% else %}
+        <span class="text-xs text-slate-400 italic flex items-center gap-2">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-slate-300 animate-pulse flex-shrink-0"></span>
+            ⚡ Starting up...
+        </span>
+        {% endif %}
+        {% else %}
+        <p class="text-xs text-slate-600 leading-relaxed">
+            <span class="font-bold text-slate-400 font-mono mr-1">{{ item.created_at.strftime("%b %d") }}:</span>
+            "{{ item.content | truncate(50) }}"
+        </p>
+        {% endif %}
+    </td>
+
+    <td class="px-6 py-8 text-[11px] font-bold text-slate-900">{{ item.next_delivery.strftime("%a %b %d, %I %p") }}</td>
+
+    {% if item.status == "running" %}
+    <td class="px-6 py-8">
+        <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-[9px] font-black text-indigo-600 border border-indigo-100 uppercase tracking-widest">
+            <svg class="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Running
+        </span>
+    </td>
+    <td class="pl-6 pr-10 py-8 text-right">
+        <span class="text-[11px] font-black text-slate-200 uppercase tracking-widest">—</span>
+    </td>
+
+    {% elif item.status == "ready" %}
+    <td class="px-6 py-8">
+        <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-[9px] font-black text-green-600 border border-green-100 uppercase tracking-widest">
+            <div class="h-1.5 w-1.5 rounded-full bg-green-600"></div>
+            Ready
+        </span>
+    </td>
+    <td class="pl-6 pr-10 py-8 text-right">
+        <a href="/digests/{{ item.id }}"
+            class="text-[11px] font-black text-indigo-600 hover:text-indigo-900 uppercase tracking-[0.2em] transition underline decoration-2 underline-offset-8">Read</a>
+    </td>
+
+    {% elif item.status == "failed" %}
+    <td class="px-6 py-8">
+        <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-[9px] font-black text-red-600 border border-red-100 uppercase tracking-widest">
+            <div class="h-1.5 w-1.5 rounded-full bg-red-600"></div>
+            Failed
+        </span>
+    </td>
+    <td class="pl-6 pr-10 py-8 text-right">
+        <a href="/digests"
+            class="text-[11px] font-black text-red-600 hover:text-red-900 uppercase tracking-[0.2em] transition underline decoration-2 underline-offset-8">Retry</a>
+    </td>
+    {% endif %}
+</tr>

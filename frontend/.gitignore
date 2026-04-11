@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.local
+dist/
+notes.txt
+build/
+*.log
+.DS_Store
+skip_research_1.html

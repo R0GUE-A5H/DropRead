@@ -1,0 +1,56 @@
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.ai_newsletter.database.engine import get_db
+from src.ai_newsletter.database.schemas import UserCreate
+from src.ai_newsletter.services.auth import create_google_user
+from src.ai_newsletter.utils.dependencies import oauth
+
+router = APIRouter()
+
+
+@router.get("/login/google")
+async def login_google(request: Request, topic: str = ""):
+    redirect_uri = request.url_for("auth_google_callback")
+    return await oauth.google.authorize_redirect(request, redirect_uri, state=topic)
+
+
+@router.get("/auth/google/callback")
+async def auth_google_callback(
+    request: Request, db: Annotated[AsyncSession, Depends(get_db)]
+):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token.get("userinfo")
+    topic = request.query_params.get("state", "")
+
+    user_model = UserCreate(
+        username=user_info["name"],
+        email=user_info["email"],
+        picture=user_info["picture"],
+        google_id=user_info["sub"],
+    )
+
+    db_user = await create_google_user(user_model, db)
+
+    request.session["user"] = {
+        "id": str(db_user.id),
+        "email": db_user.email,
+        "name": db_user.name,
+        "picture": db_user.profile_picture,
+    }
+
+    if topic:
+        return RedirectResponse(url=f"/dashboard?topic={topic}", status_code=303)
+
+    return RedirectResponse(url="/")
+
+
+@router.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    response = RedirectResponse(url="/", status_code=303)
+    response.delete_cookie("session")
+    return response
