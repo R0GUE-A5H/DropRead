@@ -23,12 +23,12 @@ async def home(request: Request):
     )
 
 
-@router.get("/dashboard")
+@router.get("/dashboard", name="dashboard")
 async def dashboard(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
     user = request.session.get("user")
     topic = request.query_params.get("topic", "")
     if not user:
-        return RedirectResponse(url="/login/google")
+        return RedirectResponse(url=request.url_for("login_google"))
     all_digests = await get_digests(db, str(user["id"]))
     return templates.TemplateResponse(
         request=request,
@@ -42,7 +42,7 @@ async def dashboard(request: Request, db: Annotated[AsyncSession, Depends(get_db
     )
 
 
-@router.get("/profile")
+@router.get("/profile", name="profile")
 async def profile(request: Request):
     user = request.session.get("user")
     user_settings = {
@@ -56,7 +56,7 @@ async def profile(request: Request):
     )
 
 
-@router.get("/digests/{digest_id}")
+@router.get("/digests/{digest_id}", name="view_digest")
 async def view_digest(
     request: Request,
     digest_id: uuid.UUID,
@@ -64,7 +64,7 @@ async def view_digest(
 ):
     user = request.session.get("user")
     if not user:
-        return RedirectResponse(url="/login/google")
+        return RedirectResponse(url=request.url_for("login_google"))
 
     digest = await get_digest_by_id(
         db,
@@ -73,7 +73,7 @@ async def view_digest(
     )
 
     if not digest:
-        return RedirectResponse(url="/dashboard")
+        return RedirectResponse(url=request.url_for("dashboard"))
 
     web_info = digest.extra_data or []
     source_count = len(web_info)

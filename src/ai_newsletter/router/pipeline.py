@@ -32,8 +32,8 @@ def run_pipeline_in_thread(topic: str, digest_id: str):
 async def init_pipeline(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
-    frequency: str = Form(...),
-    time: str = Form(...),
+    # frequency: str = Form(...),
+    # time: str = Form(...),
     topic: str = Form(...),
 ):
     user = request.session.get("user")

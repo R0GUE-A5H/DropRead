@@ -18,8 +18,6 @@ class User(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     profile_picture: Mapped[str | None] = mapped_column(String)
     google_id: Mapped[str | None] = mapped_column(String, unique=True)
-
-    delivery_time: Mapped[str] = mapped_column(String, nullable=False, default="08:00")
     email_notifications: Mapped[bool] = mapped_column(
         default=True, server_default="true"
     )
@@ -36,7 +34,7 @@ class Digest(Base):
     current_step: Mapped[str | None] = mapped_column(
         String, nullable=True, default=None
     )
-
+    auto_digest: Mapped[bool] = mapped_column(default=False, server_default="false")
     title: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
@@ -44,4 +42,6 @@ class Digest(Base):
     next_delivery: Mapped[datetime] = mapped_column(
         server_default=text("NOW() + INTERVAL '7 days'")
     )
+    delivery_time: Mapped[str] = mapped_column(String, nullable=False, default="08:00")
+    delivery_day: Mapped[str] = mapped_column(String, nullable=False, default="Monday")
     extra_data: Mapped[list[dict] | None] = mapped_column(JSONB)

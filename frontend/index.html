@@ -73,12 +73,12 @@
                             <p class="text-[9px] font-bold text-slate-400 lowercase tracking-tighter truncate">{{
                                 user.email }}</p>
                         </div>
-                        <a href="/dashboard"
+                        <a href="{{request.url_for('dashboard')}}"
                             class="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Dashboard</a>
-                        <a href="/profile"
+                        <a href="{{request.url_for('profile')}}"
                             class="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Profile</a>
                         <hr class="my-1 border-slate-100">
-                        <a href="/logout"
+                        <a href="{{request.url_for('logout')}}"
                             class="block px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50">Logout</a>
                     </div>
                 </div>
@@ -113,7 +113,7 @@
                         Tell us what you're curious about. We research it weekly across dozens of sources and send you
                         what actually matters — no noise, no feeds to manage.
                     </p>
-                    <form hx-post="/api/digests/submitText" hx-swap="none" class="max-w-2xl group"
+                    <form hx-post="{{request.url_for('submit_text')}}" hx-swap="none" class="max-w-2xl group"
                         x-on:open-auth-modal.window="modalOpen = true">
 
                         <div
@@ -224,7 +224,7 @@
             <p class="text-xs text-slate-500 mb-8 leading-relaxed">Sign in to manage your topics and read your latest
                 digests.</p>
 
-            <a :href="'/login/google?topic=' + encodeURIComponent(pendingTopic)"
+            <a :href="pendingTopic ? '{{ request.url_for('login_google') }}?topic=' + encodeURIComponent(pendingTopic) : '{{ request.url_for('login_google') }}'"
                 class="w-full bg-slate-900 text-white py-3 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-center block">
                 Continue with Google
             </a>

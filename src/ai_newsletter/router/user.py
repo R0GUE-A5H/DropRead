@@ -19,18 +19,17 @@ async def route_create_user(
     return await create_google_user(user, db)
 
 
-@router.get("/getUserSettings")
+@router.get("/getUserSettings", name="get_user_settings")
 async def get_user_settings(
-    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: models.User = Depends(get_current_user),
 ):
     return {
-        "delivery_time": current_user.delivery_time,
-        "email_notifications": current_user.email_notifications,
+        # "delivery_time": current_user.delivery_time,
+        # "email_notifications": current_user.email_notifications,
     }
 
 
-@router.patch("/updateSettings")
+@router.patch("/updateSettings", name="update_profile_setting")
 async def update_profile_setting(
     payload: UserSettings,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -50,7 +49,7 @@ async def update_profile_setting(
     }
 
 
-@router.post("/deleteUser")
+@router.post("/deleteUser", name="delete_user")
 async def delete_user(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],

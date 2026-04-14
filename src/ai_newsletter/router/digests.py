@@ -11,10 +11,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.core.config import get_settings
 from src.ai_newsletter.database.engine import get_db
-from src.ai_newsletter.database.schemas import DigestRead
+from src.ai_newsletter.database.schemas import DigestRead, EmailInfoSave
 from src.ai_newsletter.models import models
 from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.services.auth import get_current_user
+from src.ai_newsletter.services.digest_mail import (
+    get_subscription_status,
+    save_digest_mail,
+    unsubscribe_digest_mail,
+)
 
 settings = get_settings()
 router = APIRouter()
@@ -22,7 +27,10 @@ TEMPLATE_DIR = Path(__file__).resolve().parent.parent.parent.parent / "frontend"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
-@router.post("", response_model=list[DigestRead])
+@router.post(
+    "",
+    response_model=list[DigestRead],
+)
 async def route_create_digests(
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -37,7 +45,7 @@ async def route_create_digests(
     return digests
 
 
-@router.get("/{digest_id}/status")
+@router.get("/{digest_id}/status", name="get_digest_status")
 async def get_digest_status(
     request: Request,
     digest_id: uuid.UUID,
@@ -60,7 +68,7 @@ async def get_digest_status(
     )
 
 
-@router.post("/submitText")
+@router.post("/submitText", name="submit_text")
 async def get_digest_text(request: Request):
     form = await request.form()
     topic = form["topic"]
@@ -74,5 +82,37 @@ async def get_digest_text(request: Request):
     query = urlencode({"topic": topic})
 
     response = Response()
-    response.headers["HX-Redirect"] = f"/dashboard?{query}"
+    response.headers["HX-Redirect"] = f"{request.url_for('dashboard')}?{query}"
     return response
+
+
+@router.post("/subscribe/{digest_id}", name="subscribe")
+async def router_save_mailInfo(
+    request: Request,
+    emailInfoSave: EmailInfoSave,
+    digest_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    result = await save_digest_mail(request, digest_id, emailInfoSave, db)
+
+    return result
+
+
+@router.post("/unsubscribe/{digest_id}", name="unsubscribe")
+async def router_unsubscribe_mail(
+    request: Request,
+    digest_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    result = await unsubscribe_digest_mail(request, digest_id, db)
+    return result
+
+
+@router.get("/subscription_status/{digest_id}", name="subscription_status")
+async def router_get_subscription_status(
+    request: Request,
+    digest_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    result = await get_subscription_status(request, digest_id, db)
+    return result

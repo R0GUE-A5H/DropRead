@@ -1,4 +1,5 @@
 from typing import Annotated
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
@@ -12,10 +13,11 @@ from src.ai_newsletter.utils.dependencies import oauth
 router = APIRouter()
 
 
-@router.get("/login/google")
+@router.get("/login/google", name="login_google")
 async def login_google(request: Request, topic: str = ""):
     redirect_uri = request.url_for("auth_google_callback")
-    return await oauth.google.authorize_redirect(request, redirect_uri, state=topic)
+    state = topic or "none"
+    return await oauth.google.authorize_redirect(request, redirect_uri, state=state)
 
 
 @router.get("/auth/google/callback")
@@ -25,6 +27,8 @@ async def auth_google_callback(
     token = await oauth.google.authorize_access_token(request)
     user_info = token.get("userinfo")
     topic = request.query_params.get("state", "")
+    if topic == "none":
+        topic = ""
 
     user_model = UserCreate(
         username=user_info["name"],
@@ -43,12 +47,15 @@ async def auth_google_callback(
     }
 
     if topic:
-        return RedirectResponse(url=f"/dashboard?topic={topic}", status_code=303)
+        return RedirectResponse(
+            url=f"{request.url_for('dashboard')}?{urlencode({'topic': topic})}",  # watif topic contains special chars
+            status_code=303,
+        )
 
     return RedirectResponse(url="/")
 
 
-@router.get("/logout")
+@router.get("/logout", name="logout")
 async def logout(request: Request):
     request.session.clear()
     response = RedirectResponse(url="/", status_code=303)
