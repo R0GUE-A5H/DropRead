@@ -1,9 +1,15 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, engine_from_config, pool
 
 from alembic import context
 from src.ai_newsletter.models.models import Base
+from urllib.parse import quote_plus
+import os
+from dotenv import load_dotenv
+
+env = os.getenv("APP_ENV", "local")
+load_dotenv(f".env.{env}")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -25,7 +31,15 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+def get_sync_url():
+    user = os.getenv("POSTGRES_USER")
+    password = quote_plus(os.getenv("POSTGRES_PASSWORD"))
+    host = os.getenv("POSTGRES_HOST")
+    port = os.getenv("POSTGRES_PORT", "5432")
+    db = os.getenv("POSTGRES_DB")
+    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
 
+#config.set_main_option("sqlalchemy.url", get_sync_url())
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -57,15 +71,10 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(get_sync_url(), poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
-
         with context.begin_transaction():
             context.run_migrations()
 

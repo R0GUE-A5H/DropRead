@@ -1,6 +1,10 @@
-from functools import lru_cache
+
+import os
+from urllib.parse import quote_plus
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_env = os.getenv("APP_ENV", "local")
 
 
 class Settings(BaseSettings):
@@ -12,7 +16,8 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
-        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        password = quote_plus(self.POSTGRES_PASSWORD)
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{password}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     groq_api_key: str
     groq_model: str = "llama-3.3-70b-versatile"
@@ -27,13 +32,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=f".env.{_env}",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
 
-@lru_cache
 def get_settings():
     return Settings()
