@@ -1,21 +1,27 @@
+import logging
 import uuid
 
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.ai_newsletter.database.engine import SQLDATABASE_URL
+from src.ai_newsletter.database.engine import async_session
 from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.orchestration.runner import run_pipeline
 
+logging.basicConfig(level=logging.INFO)
+
 
 async def create_digest(topic: str, digest_id: str):
-    engine = create_async_engine(SQLDATABASE_URL)
-    AsyncSession = async_sessionmaker(engine, expire_on_commit=False)
-
     try:
         final_state = await run_pipeline(topic, digest_id)
 
-        async with AsyncSession() as db:
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"Pipeline complete. Pages: {len(final_state.get('state_result_page', {}))}"
+        )
+        logger.info(f"Summary length: {len(final_state.get('synthesis_summary', ''))}")
+
+        async with async_session() as db:
             await db.execute(
                 update(Digest)
                 .where(Digest.id == uuid.UUID(digest_id))
@@ -29,8 +35,14 @@ async def create_digest(topic: str, digest_id: str):
                 )
             )
             await db.commit()
-    finally:
-        await engine.dispose()
+    except Exception as e:
+        async with async_session() as db:
+            await db.execute(
+                update(Digest)
+                .where(Digest.id == uuid.UUID(digest_id))
+                .values(status="failed", current_step=str(e)[:200])
+            )
+            await db.commit()
 
 
 async def get_digests(db: AsyncSession, user_id: str):

@@ -1,4 +1,3 @@
-
 import os
 from urllib.parse import quote_plus
 
@@ -30,7 +29,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Newsletter AI Digest"
     log_level: str = "INFO"
-
+    SECRET_KEY: str
     model_config = SettingsConfigDict(
         env_file=f".env.{_env}",
         env_file_encoding="utf-8",

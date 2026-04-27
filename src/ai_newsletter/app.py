@@ -1,32 +1,26 @@
+import asyncio
+import os
+import sys
 from contextlib import asynccontextmanager
 
-from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from src.ai_newsletter.core.config import get_settings
-from src.ai_newsletter.database.engine import Base, engine
+from src.ai_newsletter.database.engine import engine
 from src.ai_newsletter.router import auth, digests, pages, pipeline, user
+from src.ai_newsletter.utils.dependencies import settings
 
-settings = get_settings()
+_is_production = os.getenv("APP_ENV") == "production"
 
-templates = Jinja2Templates(directory="templates")
-oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id=settings.google_client_id,
-    client_secret=settings.google_client_secret,
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
-)
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     yield
     await engine.dispose()
 
@@ -34,15 +28,22 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
-    app.add_middleware(SessionMiddleware, secret_key=settings.google_client_secret)
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=settings.SECRET_KEY,
+        https_only=_is_production,
+        same_site="lax",
+    )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=["*"]
+        if not _is_production
+        else ["https://dropread-912960397624.asia-south1.run.app"],
         allow_methods=["*"],
         allow_headers=["*"],
         allow_credentials=True,
     )
-
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(user.router, prefix="/api/user")

@@ -1,7 +1,7 @@
 {% if item.status == "running" %}
 <tr class="group hover:bg-slate-50/50 transition-all" id="row-{{ item.id }}"
     hx-get="{{request.url_for('get_digest_status', digest_id=item.id) }}" hx-trigger="every 2s" hx-swap="outerHTML"
-    hx-target="#row-{{ item.id }}">
+    hx-boost="true" hx-target="#row-{{ item.id }}">
     {% else %}
 <tr class="group hover:bg-slate-50/50 transition-all">
     {% endif %}
@@ -20,12 +20,12 @@
         {% elif item.current_step == "Crawling Internet..." %}
         <span class="text-xs text-slate-400 italic flex items-center gap-2">
             <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
-            🔍 Searching the web...
+            🔍 Reading articles...
         </span>
         {% elif item.current_step == "Searching Internet..." %}
         <span class="text-xs text-slate-400 italic flex items-center gap-2">
             <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
-            📖 Reading articles...
+            📖 Searching the web...
         </span>
         {% elif item.current_step == "Validating content..." %}
         <span class="text-xs text-slate-400 italic flex items-center gap-2">

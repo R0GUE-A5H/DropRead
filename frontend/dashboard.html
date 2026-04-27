@@ -160,7 +160,9 @@
                             </button>
                         </div>
                         <form hx-post="/api/pipeline/init" hx-target="#digest-tbody" hx-swap="afterbegin"
-                            @submit="drawerOpen = false" class="mt-12 space-y-10">
+                            @submit.prevent.once="drawerOpen = false"
+                            hx-on:submit="this.querySelector('button[type=submit]').disabled = true"
+                            class="mt-12 space-y-10">
                             <div>
                                 <label
                                     class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">Topic</label>
@@ -183,8 +185,9 @@
                                 </div>
                             </div> -->
                             <button type="submit"
-                                class="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-200">Start
-                                researching</button>
+                                class="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Start researching
+                            </button>
                         </form>
                     </div>
                 </div>

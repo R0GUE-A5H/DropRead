@@ -12,7 +12,7 @@ async def validation_node(state: GraphState):
     crawled_pages_data = state.get("state_result_page", {})
     if not crawled_pages_data:
         # print("Nothing to validate")
-        update_status(state, "running", "Nothing to validate.")
+        await update_status(state, "running", "Nothing to validate.")
         return state
     await update_status(state, "running", "Validating content...")
     truncated_result = {
