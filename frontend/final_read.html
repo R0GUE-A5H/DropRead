@@ -255,11 +255,11 @@
         </div>
 
     </main>
-
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
         const raw = document.getElementById('raw-content').innerText
-        document.getElementById('content').innerHTML = marked.parse(raw)
+        document.getElementById('content').innerHTML = DOMPurify.sanitize(marked.parse(raw))
 
         function emailWidget() {
             return {
@@ -268,7 +268,6 @@
                 time: '08:00',
 
                 async init() {
-                    //const response = await fetch('/api/digests/subscription_status/{{ digest.id }}')
                     const response = await fetch('{{ request.url_for("subscription_status", digest_id=digest.id) }}')
                     const data = await response.json()
                     if (data.subscribed) {
@@ -278,21 +277,36 @@
                     }
                 },
 
-                subscribe() {
-                    this.state = 'sending'
-                    fetch('{{ request.url_for("subscribe", digest_id=digest.id) }}', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ day: this.day, time: this.time })
-                    })
+                async subscribe() {
+                    // convert local 08:00 IST → UTC before sending
+                    const [h, m] = this.time.split(':').map(Number)
+                    const d = new Date()
+                    d.setHours(h, m, 0, 0)
+                    const utcTime = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
 
-                    setTimeout(() => { this.state = 'subscribed' }, 900)
+                    this.state = 'sending'
+                    try {
+                        const res = await fetch('{{ request.url_for("subscribe", digest_id=digest.id) }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ day: this.day, time: utcTime })  // send UTC
+                        })
+                        if (!res.ok) throw new Error()
+                        this.state = 'subscribed'
+                    } catch {
+                        this.state = 'error'
+                    }
                 },
 
-                confirmUnsubscribe() {
+                async confirmUnsubscribe() {
                     this.state = 'sending'
-                    fetch('{{ request.url_for("unsubscribe", digest_id=digest.id) }}', { method: 'POST' })
-                    setTimeout(() => { this.state = 'dismissed' }, 700)
+                    try {
+                        const res = await fetch('{{ request.url_for("unsubscribe", digest_id=digest.id) }}', { method: 'POST' })
+                        if (!res.ok) throw new Error()
+                        this.state = 'dismissed'
+                    } catch {
+                        this.state = 'error'
+                    }
                 }
             }
         }

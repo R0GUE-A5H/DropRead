@@ -7,15 +7,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.ai_newsletter.database.engine import async_session
 from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.orchestration.runner import run_pipeline
+from src.ai_newsletter.services.cache import get_cached_digest, save_to_cache
 
 logging.basicConfig(level=logging.INFO)
 
 
-async def create_digest(topic: str, digest_id: str):
+async def create_digest(topic: str, digest_id: str, skip_cache: bool = False):
+    logger = logging.getLogger(__name__)
+    cached = None
+    if not skip_cache:
+        cached = await get_cached_digest(topic)
+    if cached:
+        async with async_session() as db:
+            await db.execute(
+                update(Digest)
+                .where(Digest.id == uuid.UUID(digest_id))
+                .values(
+                    content=cached["content"],
+                    status="ready",
+                    extra_data=cached["extra_data"],
+                    current_step=f"⚡ Cached from: {cached['cached_topic']}",
+                )
+            )
+            await db.commit()
+        return
     try:
         final_state = await run_pipeline(topic, digest_id)
-
-        logger = logging.getLogger(__name__)
+        logger.info(f">>> BG TASK SUCCESS: {digest_id}")
         logger.info(
             f"Pipeline complete. Pages: {len(final_state.get('state_result_page', {}))}"
         )
@@ -35,7 +53,10 @@ async def create_digest(topic: str, digest_id: str):
                 )
             )
             await db.commit()
+        await save_to_cache(topic, digest_id)
+
     except Exception as e:
+        logger.error(f">>> BG TASK FAILED: {digest_id} - {e}")
         async with async_session() as db:
             await db.execute(
                 update(Digest)
@@ -47,7 +68,11 @@ async def create_digest(topic: str, digest_id: str):
 
 async def get_digests(db: AsyncSession, user_id: str):
 
-    stmt = select(Digest).where(Digest.user_id == uuid.UUID(user_id))
+    stmt = (
+        select(Digest)
+        .where(Digest.user_id == uuid.UUID(user_id))
+        .order_by(Digest.created_at.desc())
+    )
     result = await db.execute(stmt)
     digests = result.scalars().all()
 

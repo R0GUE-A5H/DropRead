@@ -1,13 +1,14 @@
 {% if item.status == "running" %}
 <tr class="group hover:bg-slate-50/50 transition-all" id="row-{{ item.id }}"
-    hx-get="{{request.url_for('get_digest_status', digest_id=item.id) }}" hx-trigger="every 2s" hx-swap="outerHTML"
-    hx-boost="true" hx-target="#row-{{ item.id }}">
+    hx-get="{{ request.url_for('get_digest_status', digest_id=item.id) }}" hx-trigger="every 2s" hx-swap="outerHTML"
+    hx-target="#row-{{ item.id }}">
     {% else %}
-<tr class="group hover:bg-slate-50/50 transition-all">
+<tr class="group hover:bg-slate-50/50 transition-all" id="row-{{ item.id }}">
     {% endif %}
     <td class="pl-10 pr-6 py-8">
-        <span class="text-base font-extrabold text-slate-900 tracking-tight block">{{ item.title | truncate(20)
-            }}</span>
+        <span class="text-base font-extrabold text-slate-900 tracking-tight block">
+            {{ item.title | truncate(20) }}
+        </span>
     </td>
 
     <td class="px-6 py-8 max-w-sm">
@@ -21,6 +22,11 @@
         <span class="text-xs text-slate-400 italic flex items-center gap-2">
             <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
             🔍 Reading articles...
+        </span>
+        {% elif item.current_step == "Retrying from checkpoint..." %}
+        <span class="text-xs text-slate-400 italic flex items-center gap-2">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
+            🌟 Retrying from checkpoint...
         </span>
         {% elif item.current_step == "Searching Internet..." %}
         <span class="text-xs text-slate-400 italic flex items-center gap-2">
@@ -45,13 +51,19 @@
         {% endif %}
         {% else %}
         <p class="text-xs text-slate-600 leading-relaxed">
-            <span class="font-bold text-slate-400 font-mono mr-1">{{ item.created_at.strftime("%b %d") }}:</span>
-            "{{ item.content | truncate(50) }}"
+            <span class="font-bold text-slate-400 font-mono mr-1">{{ item.created_at.strftime("%b %d") }}:</span> "{{
+            item.content | truncate(50) }}"
         </p>
         {% endif %}
     </td>
 
-    <td class="px-6 py-8 text-[11px] font-bold text-slate-900">{{ item.next_delivery.strftime("%a %b %d, %I %p") }}</td>
+    <td class="px-6 py-8 text-[11px] font-bold text-slate-900">
+        {% if item.auto_digest %}
+        <span data-utc="{{ item.next_delivery.strftime('%Y-%m-%dT%H:%M:%S') }}Z"></span>
+        {% else %}
+        <span class="text-slate-300">—</span>
+        {% endif %}
+    </td>
 
     {% if item.status == "running" %}
     <td class="px-6 py-8">
@@ -78,7 +90,9 @@
     </td>
     <td class="pl-6 pr-10 py-8 text-right">
         <a href="{{ request.url_for('view_digest', digest_id=item.id) }}"
-            class="text-[11px] font-black text-indigo-600 hover:text-indigo-900 uppercase tracking-[0.2em] transition underline decoration-2 underline-offset-8">Read</a>
+            class="text-[11px] font-black text-indigo-600 hover:text-indigo-900 uppercase tracking-[0.2em] transition underline decoration-2 underline-offset-8">
+            Read
+        </a>
     </td>
 
     {% elif item.status == "failed" %}
@@ -90,8 +104,29 @@
         </span>
     </td>
     <td class="pl-6 pr-10 py-8 text-right">
-        <a href="/digests"
-            class="text-[11px] font-black text-red-600 hover:text-red-900 uppercase tracking-[0.2em] transition underline decoration-2 underline-offset-8">Retry</a>
+        <form hx-post="/api/pipeline/init" hx-target="#row-{{ item.id }}" hx-swap="outerHTML"
+            hx-disabled-elt="find button" class="inline">
+            <input type="hidden" name="topic" value="{{ item.title }}">
+            <button type="submit"
+                class="text-[11px] font-black text-indigo-600 hover:text-indigo-900 uppercase tracking-[0.2em] transition underline decoration-2 underline-offset-8 cursor-pointer">
+                Retry
+            </button>
+        </form>
     </td>
     {% endif %}
 </tr>
+<script>
+    function convertUTCDates() {
+        document.querySelectorAll('[data-utc]').forEach(el => {
+            if (el.textContent.trim()) return
+            el.textContent = new Date(el.dataset.utc).toLocaleString(undefined, {
+                weekday: 'short', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            })
+        })
+    }
+
+    convertUTCDates()  // run on initial load
+
+    document.body.addEventListener('htmx:afterSwap', convertUTCDates)  // run after HTMX swaps
+</script>

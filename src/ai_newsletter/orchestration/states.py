@@ -10,6 +10,7 @@ class GraphState(TypedDict):
     final_search_links: list[str]
     synthesis_summary: str
     digest_id: str
+    search_snippets: dict[str, str]
 
 
 class SearchQuery(BaseModel):
@@ -20,5 +21,6 @@ class SearchQuery(BaseModel):
 
 class ValidatorAgent(BaseModel):
     final_url: list[str] = Field(
-        description="A list of URLs that are relevant to the original topic. The URLs should be directly related to the topic and provide substantial information about it."
+        description="List of relevant URLs. Each item is a single URL string directly related to the topic.",
+        min_length=1,
     )

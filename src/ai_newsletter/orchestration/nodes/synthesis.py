@@ -10,7 +10,6 @@ async def synthesis_node(state: GraphState):
 
     crawled_data = state.get("state_result_page", {})
 
-    # --- CHANGE 4: Read from nested content key ---
     validated_list = [
         crawled_data[url]["content"][:5000].replace("\n", " ").strip() + "..."
         for url in state["final_search_links"]

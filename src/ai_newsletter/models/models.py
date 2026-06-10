@@ -3,7 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, Text, Uuid, func, text
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import DateTime, ForeignKey, String, Text, Uuid, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -45,3 +46,18 @@ class Digest(Base):
     delivery_time: Mapped[str] = mapped_column(String, nullable=False, default="08:00")
     delivery_day: Mapped[str] = mapped_column(String, nullable=False, default="Monday")
     extra_data: Mapped[list[dict] | None] = mapped_column(JSONB)
+
+
+class DigestCache(Base):
+    __tablename__ = "digest_cache"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    topic: Mapped[str] = mapped_column(Text, nullable=False)
+    topic_embedding: Mapped[Vector] = mapped_column(Vector(384), nullable=False)
+    digest_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("digests.id", ondelete="CASCADE"), nullable=False
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

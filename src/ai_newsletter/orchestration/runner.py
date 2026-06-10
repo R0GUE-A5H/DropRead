@@ -6,6 +6,8 @@ settings = get_settings()
 async def run_pipeline(topic: str, digest_id: str) -> dict:
     from src.ai_newsletter.orchestration.graph import pipeline
 
+    config = {"configurable": {"thread_id": digest_id}}
+
     return await pipeline.ainvoke(
         {
             "topic": topic,
@@ -15,5 +17,6 @@ async def run_pipeline(topic: str, digest_id: str) -> dict:
             "state_result_page": {},
             "final_search_links": [],
             "synthesis_summary": "",
-        }
+        },
+        config=config,
     )

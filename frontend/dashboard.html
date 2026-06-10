@@ -7,7 +7,7 @@
     <title>DropRead | My Digests</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
@@ -159,35 +159,36 @@
                                 </svg>
                             </button>
                         </div>
-                        <form hx-post="/api/pipeline/init" hx-target="#digest-tbody" hx-swap="afterbegin"
+                        <form hx-post="/api/pipeline/init" hx-target="#digest-tbody" hx-swap="none"
                             @submit.prevent.once="drawerOpen = false"
                             hx-on:submit="this.querySelector('button[type=submit]').disabled = true"
                             class="mt-12 space-y-10">
                             <div>
-                                <label
-                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">Topic</label>
-                                <input type="text" name="topic" value="{{topic}}" required
-                                    placeholder="e.g. RISC-V Power Optimization"
-                                    class="w-full px-5 py-4 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold focus:ring-2 focus:ring-slate-900 focus:outline-none transition">
-                            </div>
-                            <!-- <div>
-                                <label
-                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">How
-                                    often?</label>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <select name="frequency"
-                                        class="appearance-none w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-widest focus:ring-2 focus:ring-slate-900 focus:outline-none transition">
-                                        <option>Weekly</option>
-                                        <option>Daily</option>
-                                    </select>
-                                    <input name="time" type="time" value="08:00"
-                                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-slate-900 focus:outline-none transition">
+                                <div>
+                                    <label
+                                        class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">Topic</label>
+                                    <input type="text" name="topic" value="{{topic}}" required
+                                        placeholder="e.g. RISC-V Power Optimization"
+                                        class="w-full px-5 py-4 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold focus:ring-2 focus:ring-slate-900 focus:outline-none transition">
                                 </div>
-                            </div> -->
-                            <button type="submit"
-                                class="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Start researching
-                            </button>
+                                <!-- <div>
+                                                        <label
+                                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">How
+                                                            often?</label>
+                                                        <div class="grid grid-cols-2 gap-4">
+                                                            <select name="frequency"
+                                                                class="appearance-none w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-widest focus:ring-2 focus:ring-slate-900 focus:outline-none transition">
+                                                                <option>Weekly</option>
+                                                                <option>Daily</option>
+                                                            </select>
+                                                            <input name="time" type="time" value="08:00"
+                                                                class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-slate-900 focus:outline-none transition">
+                                                        </div>
+                                                    </div> -->
+                                <button type="submit" @digest-done.window="$el.disabled = false"
+                                    class="w-full mt-5 bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Start researching
+                                </button>
                         </form>
                     </div>
                 </div>

@@ -21,8 +21,12 @@ class Settings(BaseSettings):
     groq_api_key: str
     groq_model: str = "llama-3.3-70b-versatile"
 
+    app_url: str = "http://localhost:8000"
+    allowed_origins: str = "*"
+
     serper_api_key: str
     serper_page_num: int = 20
+    resend_api_key: str
 
     google_client_id: str
     google_client_secret: str

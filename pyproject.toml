@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.18.4",
+    "apscheduler>=3.11.2",
     "asyncpg>=0.31.0",
     "authlib>=1.6.9",
     "crawl4ai>=0.8.6",
+    "curl-cffi>=0.15.0",
     "email-validator",
     "fastapi[standard]>=0.135.2",
     "itsdangerous>=2.2.0",
@@ -16,10 +18,15 @@ dependencies = [
     "langchain-core>=1.2.23",
     "langchain-groq>=1.1.2",
     "langgraph>=1.1.3",
+    "langgraph-checkpoint-postgres>=3.0.5",
+    "markdown>=3.10.2",
+    "pgvector>=0.4.2",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
     "requests>=2.33.0",
+    "resend>=2.30.1",
+    "sentence-transformers>=5.4.1",
     "sqlalchemy>=2.0.48",
     "trafilatura>=2.0.0",
     "typing-extensions>=4.15.0",
@@ -48,6 +55,5 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint.flake8-bugbear]
-# Allow default arguments like, e.g., `data: List[str] = fastapi.Query(None)`.
 extend-immutable-calls = ["Depends", "fastapi.Depends", "Query", "fastapi.Query"]
 

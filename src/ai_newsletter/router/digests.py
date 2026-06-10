@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from pathlib import Path
 from typing import Annotated
@@ -5,12 +6,13 @@ from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
+from fastapi.sse import EventSourceResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.core.config import get_settings
-from src.ai_newsletter.database.engine import get_db
+from src.ai_newsletter.database.engine import async_session, get_db
 from src.ai_newsletter.database.schemas import DigestRead, EmailInfoSave
 from src.ai_newsletter.models import models
 from src.ai_newsletter.models.models import Digest
@@ -58,14 +60,48 @@ async def get_digest_status(
     if item is None:
         raise HTTPException(status_code=404, detail="Digest not found")
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request,
         name="partials/status_badge.html",
-        context={
-            "request": request,
-            "item": item,
-        },
+        context={"request": request, "item": item},
     )
+
+    if item.status in ("ready", "failed"):
+        response.headers["HX-Trigger"] = "digest-done"
+
+    return response
+
+
+@router.get("/{digest_id}/stream", name="stream_digest_status")
+async def stream_digest_status(
+    request: Request,
+    digest_id: uuid.UUID,
+):
+    async def generator():
+        while True:
+            if await request.is_disconnected():
+                break
+
+            async with async_session() as session:
+                result = await session.execute(
+                    select(Digest).where(Digest.id == digest_id)
+                )
+                item = result.scalar_one_or_none()
+
+            if not item:
+                break
+
+            html = templates.get_template("partials/status_badge.html").render(
+                {"request": request, "item": item}
+            )
+            yield {"data": html}
+
+            if item.status in ("ready", "failed"):
+                break
+
+            await asyncio.sleep(2)
+
+    return EventSourceResponse(generator())
 
 
 @router.post("/submitText", name="submit_text")

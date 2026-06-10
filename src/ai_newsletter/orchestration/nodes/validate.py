@@ -8,7 +8,8 @@ from src.ai_newsletter.utils.shared import update_status
 
 async def validation_node(state: GraphState):
     # print("-------Starting validation of crawled content------")
-
+    # if os.getenv("FORCE_FAIL_RESUME_TEST") == "1":
+    #     raise RuntimeError("Simulated failure AFTER crawl checkpoint committed")
     crawled_pages_data = state.get("state_result_page", {})
     if not crawled_pages_data:
         # print("Nothing to validate")
@@ -22,7 +23,7 @@ async def validation_node(state: GraphState):
 
     structured_validator = llm.with_structured_output(ValidatorAgent)
 
-    validation_result = structured_validator.invoke(
+    validation_result = await structured_validator.ainvoke(
         synth_prompt.format(
             original_topic=state["topic"],
             page_content=json.dumps(truncated_result, indent=2),

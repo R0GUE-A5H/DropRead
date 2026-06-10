@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.database.schemas import EmailInfoSave
 from src.ai_newsletter.models.models import Digest
+from src.ai_newsletter.services.scheduler import next_delivery_dt
 
 
 async def save_digest_mail(
@@ -25,6 +26,7 @@ async def save_digest_mail(
             auto_digest=True,
             delivery_day=emailInfoSave.day,
             delivery_time=emailInfoSave.time,
+            next_delivery=next_delivery_dt(emailInfoSave.day, emailInfoSave.time),
         )
     )
 
