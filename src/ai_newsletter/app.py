@@ -69,6 +69,10 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
+    allowed_origins = [
+        o.strip() for o in settings.allowed_origins.split(",") if o.strip()
+    ]
+
     app.add_middleware(
         SessionMiddleware,
         secret_key=settings.SECRET_KEY,
@@ -77,16 +81,14 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"]
-        if not _is_production
-        else [
-            "https://dropread-912960397624.asia-south1.run.app"
-        ],  # remember to change it
+        allow_origins=["*"] if not _is_production else allowed_origins,
         allow_methods=["*"],
         allow_headers=["*"],
         allow_credentials=True,
     )
-    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+    app.add_middleware(
+        ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1", "web", "localhost"]
+    )
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(user.router, prefix="/api/user")

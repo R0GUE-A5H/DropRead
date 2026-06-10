@@ -53,7 +53,15 @@ async def get_digest_status(
     digest_id: uuid.UUID,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    stmt = select(Digest).where(Digest.id == digest_id)
+
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    stmt = select(Digest).where(
+        Digest.id == digest_id,
+        Digest.user_id == uuid.UUID(user["id"]),
+    )
     result = await db.execute(stmt)
     item = result.scalar_one_or_none()
 

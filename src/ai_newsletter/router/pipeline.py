@@ -3,7 +3,16 @@ import uuid
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Form,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+)
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +37,7 @@ async def init_pipeline(
     request: Request,
     background_tasks: BackgroundTasks,
     db: Annotated[AsyncSession, Depends(get_db)],
-    topic: str = Form(...),
+    topic: str = Form(..., min_length=3, max_length=200),
 ):
     user = request.session.get("user")
     if not user:
@@ -131,6 +140,11 @@ async def init_pipeline(
 
 
 @router.post("/scheduler/run")
-async def trigger_scheduler_run(request: Request):
+async def trigger_scheduler_run(
+    request: Request,
+    x_scheduler_secret: Annotated[str | None, Header()] = None,
+):
+    if x_scheduler_secret != settings.SECRET_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden")
     await run_scheduled_digests()
     return {"status": "ok"}

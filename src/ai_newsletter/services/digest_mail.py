@@ -18,10 +18,9 @@ async def save_digest_mail(
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-
     await db.execute(
         update(Digest)
-        .where(Digest.id == digest_id)
+        .where(Digest.id == digest_id, Digest.user_id == uuid.UUID(user["id"]))
         .values(
             auto_digest=True,
             delivery_day=emailInfoSave.day,
@@ -29,9 +28,7 @@ async def save_digest_mail(
             next_delivery=next_delivery_dt(emailInfoSave.day, emailInfoSave.time),
         )
     )
-
     await db.commit()
-
     return {"detail": "Subscribed"}
 
 
@@ -43,13 +40,12 @@ async def unsubscribe_digest_mail(
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-
     await db.execute(
-        update(Digest).where(Digest.id == digest_id).values(auto_digest=False)
+        update(Digest)
+        .where(Digest.id == digest_id, Digest.user_id == uuid.UUID(user["id"]))
+        .values(auto_digest=False)
     )
-
     await db.commit()
-
     return {"detail": "Unsubscribed"}
 
 
@@ -61,13 +57,15 @@ async def get_subscription_status(
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-
-    result = await db.execute(select(Digest).where(Digest.id == digest_id))
+    result = await db.execute(
+        select(Digest).where(
+            Digest.id == digest_id,
+            Digest.user_id == uuid.UUID(user["id"]),
+        )
+    )
     digest = result.scalar_one_or_none()
-
     if not digest:
         raise HTTPException(status_code=404, detail="Digest not found")
-
     return {
         "subscribed": digest.auto_digest,
         "day": digest.delivery_day,
