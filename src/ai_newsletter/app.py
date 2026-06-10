@@ -86,9 +86,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         allow_credentials=True,
     )
-    app.add_middleware(
-        ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1", "web", "localhost"]
-    )
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(user.router, prefix="/api/user")
