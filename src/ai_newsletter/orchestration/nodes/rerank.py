@@ -51,7 +51,7 @@ async def rerank_node(state: GraphState):
         return _get_reranker().predict(pairs)
 
     loop = asyncio.get_running_loop()
-    scores = await loop.run_in_executor(None, _reranker.predict, pairs)
+    scores = await loop.run_in_executor(None, _score)
 
     scored_urls = sorted(
         zip(urls, scores, strict=True), key=lambda x: x[1], reverse=True
