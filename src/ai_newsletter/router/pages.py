@@ -42,20 +42,6 @@ async def dashboard(request: Request, db: Annotated[AsyncSession, Depends(get_db
     )
 
 
-@router.get("/profile", name="profile")
-async def profile(request: Request):
-    user = request.session.get("user")
-    user_settings = {
-        "deliveryTime": "08:00",
-        "emailNotifications": True,
-    }
-    return templates.TemplateResponse(
-        request=request,
-        name="profile.html",
-        context={"request": request, "user": user, "user_settings": user_settings},
-    )
-
-
 @router.get("/digests/{digest_id}", name="view_digest")
 async def view_digest(
     request: Request,

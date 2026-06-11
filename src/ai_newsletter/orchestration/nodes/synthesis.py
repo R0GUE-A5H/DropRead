@@ -16,6 +16,13 @@ async def synthesis_node(state: GraphState):
         if url in crawled_data
     ]
 
+    if not validated_list:
+        await update_status(state, "failed", "No content to synthesize")
+        await update_digest_status(
+            state["digest_id"], "failed", current_step="No valid sources found"
+        )
+        return {"synthesis_summary": "No content available"}
+
     synth_chain = summarization_prompt | llm
     synthesized_summary = synth_chain.invoke(
         {
