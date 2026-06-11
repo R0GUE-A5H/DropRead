@@ -1,4 +1,5 @@
-import asyncio
+import json
+import re
 import uuid
 from pathlib import Path
 from typing import Annotated
@@ -6,13 +7,12 @@ from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
-from fastapi.sse import EventSourceResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.core.config import get_settings
-from src.ai_newsletter.database.engine import async_session, get_db
+from src.ai_newsletter.database.engine import get_db
 from src.ai_newsletter.database.schemas import DigestRead, EmailInfoSave
 from src.ai_newsletter.models import models
 from src.ai_newsletter.models.models import Digest
@@ -22,11 +22,15 @@ from src.ai_newsletter.services.digest_mail import (
     save_digest_mail,
     unsubscribe_digest_mail,
 )
+from src.ai_newsletter.utils.limiter import limiter
 
 settings = get_settings()
 router = APIRouter()
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent.parent.parent / "frontend"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
+
+MAX_TOPIC_LENGTH = 200
+ALLOWED_TOPIC_RE = re.compile(r"^[\w\s\-.,!?()&]+$")
 
 
 @router.post(
@@ -48,6 +52,7 @@ async def route_create_digests(
 
 
 @router.get("/{digest_id}/status", name="get_digest_status")
+@limiter.limit("60/minute")
 async def get_digest_status(
     request: Request,
     digest_id: uuid.UUID,
@@ -55,8 +60,6 @@ async def get_digest_status(
 ):
 
     user = request.session.get("user")
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
 
     stmt = select(Digest).where(
         Digest.id == digest_id,
@@ -80,7 +83,7 @@ async def get_digest_status(
     return response
 
 
-@router.get("/{digest_id}/stream", name="stream_digest_status")
+"""@router.get("/{digest_id}/stream", name="stream_digest_status")
 async def stream_digest_status(
     request: Request,
     digest_id: uuid.UUID,
@@ -109,28 +112,37 @@ async def stream_digest_status(
 
             await asyncio.sleep(2)
 
-    return EventSourceResponse(generator())
+    return EventSourceResponse(generator())"""
 
 
 @router.post("/submitText", name="submit_text")
+@limiter.limit("5/minute")
 async def get_digest_text(request: Request):
     form = await request.form()
-    topic = form["topic"]
+    topic = form.get("topic", "").strip()
+
+    if not topic:
+        return HTMLResponse(status_code=400, content="Topic is required")
+    if len(topic) > MAX_TOPIC_LENGTH:
+        return HTMLResponse(status_code=400, content="Topic too long")
+    if not ALLOWED_TOPIC_RE.match(topic):
+        return HTMLResponse(
+            status_code=400, content="Topic contains invalid characters"
+        )
 
     user = request.session.get("user")
     if not user:
-        return HTMLResponse(
-            status_code=200, headers={"HX-Trigger": f'{{"open-auth-modal": "{topic}"}}'}
-        )
+        trigger_value = json.dumps({"open-auth-modal": topic})
+        return HTMLResponse(status_code=200, headers={"HX-Trigger": trigger_value})
 
     query = urlencode({"topic": topic})
-
     response = Response()
     response.headers["HX-Redirect"] = f"{request.url_for('dashboard')}?{query}"
     return response
 
 
 @router.post("/subscribe/{digest_id}", name="subscribe")
+@limiter.limit("10/minute")
 async def router_save_mailInfo(
     request: Request,
     emailInfoSave: EmailInfoSave,
@@ -143,6 +155,7 @@ async def router_save_mailInfo(
 
 
 @router.post("/unsubscribe/{digest_id}", name="unsubscribe")
+@limiter.limit("10/minute")
 async def router_unsubscribe_mail(
     request: Request,
     digest_id: uuid.UUID,

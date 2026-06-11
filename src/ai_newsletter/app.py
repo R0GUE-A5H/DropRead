@@ -1,5 +1,7 @@
 import os
 
+from src.ai_newsletter.services.auth import get_current_user
+
 # os.environ["TRANSFORMERS_OFFLINE"] = "1"
 # os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
@@ -10,8 +12,10 @@ import sys
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import update
 from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
@@ -21,7 +25,8 @@ from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.orchestration.graph import init_pipeline, pool
 from src.ai_newsletter.router import auth, digests, pages, pipeline, user
 from src.ai_newsletter.services.scheduler import run_scheduled_digests
-from src.ai_newsletter.utils.dependencies import settings
+from src.ai_newsletter.utils.dependencies import settings, verify_csrf
+from src.ai_newsletter.utils.limiter import limiter
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -69,6 +74,9 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     allowed_origins = [
         o.strip() for o in settings.allowed_origins.split(",") if o.strip()
     ]
@@ -89,9 +97,21 @@ def create_app() -> FastAPI:
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
     app.include_router(auth.router)
     app.include_router(pages.router)
-    app.include_router(user.router, prefix="/api/user")
-    app.include_router(digests.router, prefix="/api/digests")
-    app.include_router(pipeline.router, prefix="/api/pipeline")
+    app.include_router(
+        user.router,
+        prefix="/api/user",
+        dependencies=[Depends(get_current_user), Depends(verify_csrf)],
+    )
+    app.include_router(
+        digests.router,
+        prefix="/api/digests",
+        dependencies=[Depends(get_current_user), Depends(verify_csrf)],
+    )
+    app.include_router(
+        pipeline.router,
+        prefix="/api/pipeline",
+        dependencies=[Depends(get_current_user), Depends(verify_csrf)],
+    )
 
     return app
 

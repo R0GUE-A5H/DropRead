@@ -10,7 +10,24 @@
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+        const csrfToken = getCookie('csrf_token');
 
+        document.addEventListener('htmx:configRequest', (e) => {
+            if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(e.detail.verb.toUpperCase())) {
+                e.detail.headers['X-CSRF-Token'] = csrfToken;
+            }
+        });
+
+        window.csrfFetch = (url, options = {}) => fetch(url, {
+            ...options,
+            headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json', ...options.headers }
+        });
+    </script>
     <style>
         [x-cloak] {
             display: none !important;

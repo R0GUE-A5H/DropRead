@@ -27,6 +27,7 @@ dependencies = [
     "requests>=2.33.0",
     "resend>=2.30.1",
     "sentence-transformers>=5.4.1",
+    "slowapi>=0.1.9",
     "sqlalchemy>=2.0.48",
     "trafilatura>=2.0.0",
     "typing-extensions>=4.15.0",

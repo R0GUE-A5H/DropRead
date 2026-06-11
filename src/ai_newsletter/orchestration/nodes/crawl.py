@@ -13,6 +13,7 @@ from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
 from src.ai_newsletter.orchestration.states import GraphState
 from src.ai_newsletter.utils.shared import update_status
+from src.ai_newsletter.utils.ssrf import is_safe_url
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -255,6 +256,9 @@ async def web_crawl(
     urls: list[str], snippets: dict[str, str] | None = None
 ) -> list[dict]:
     snippets = snippets or {}
+    safe_urls = [u for u in urls if is_safe_url(u)]
+    if len(safe_urls) < len(urls):
+        logger.warning(f"Blocked {len(urls) - len(safe_urls)} unsafe URLs")
     semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 
     async def bounded_crawl(u: str):
@@ -262,7 +266,7 @@ async def web_crawl(
             return await crawl_one(u, snippets.get(u, ""))
 
     results = await asyncio.gather(
-        *(bounded_crawl(u) for u in urls), return_exceptions=True
+        *(bounded_crawl(u) for u in safe_urls), return_exceptions=True
     )
     return [r for r in results if not isinstance(r, Exception)]
 

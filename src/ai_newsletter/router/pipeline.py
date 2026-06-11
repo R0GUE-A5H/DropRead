@@ -8,8 +8,6 @@ from fastapi import (
     BackgroundTasks,
     Depends,
     Form,
-    Header,
-    HTTPException,
     Request,
     Response,
 )
@@ -22,7 +20,7 @@ from src.ai_newsletter.core.config import get_settings
 from src.ai_newsletter.database.engine import get_db
 from src.ai_newsletter.services.cache import get_cached_digest
 from src.ai_newsletter.services.digest import create_digest
-from src.ai_newsletter.services.scheduler import run_scheduled_digests
+from src.ai_newsletter.utils.limiter import limiter
 
 settings = get_settings()
 router = APIRouter()
@@ -33,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/init")
+@limiter.limit("5/minute")
 async def init_pipeline(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -139,12 +138,12 @@ async def init_pipeline(
     return new_response(digest)
 
 
-@router.post("/scheduler/run")
-async def trigger_scheduler_run(
-    request: Request,
-    x_scheduler_secret: Annotated[str | None, Header()] = None,
-):
-    if x_scheduler_secret != settings.SECRET_KEY:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    await run_scheduled_digests()
-    return {"status": "ok"}
+# @router.post("/scheduler/run")
+# async def trigger_scheduler_run(
+#     request: Request,
+#     x_scheduler_secret: Annotated[str | None, Header()] = None,
+# ):
+#     if x_scheduler_secret != settings.SECRET_KEY:
+#         raise HTTPException(status_code=403, detail="Forbidden")
+#     await run_scheduled_digests()
+#     return {"status": "ok"}

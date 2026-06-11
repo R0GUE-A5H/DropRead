@@ -38,7 +38,7 @@ def next_delivery_dt(delivery_day: str, delivery_time: str) -> datetime:
 
 async def run_scheduled_digests():
     now = datetime.utcnow()
-    logger.info(f"🕐 Scheduler running at {now}")
+    logger.info(f"Scheduler running at {now}")
 
     async with async_session() as db:
         result = await db.execute(

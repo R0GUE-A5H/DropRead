@@ -5,21 +5,16 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.database.engine import get_db
-from src.ai_newsletter.database.schemas import UserCreate, UserRead, UserSettings
+from src.ai_newsletter.database.schemas import UserSettings
 from src.ai_newsletter.models import models
-from src.ai_newsletter.services.auth import create_google_user, get_current_user
+from src.ai_newsletter.services.auth import get_current_user
+from src.ai_newsletter.utils.limiter import limiter
 
 router = APIRouter()
 
 
-@router.post("", response_model=UserRead)
-async def route_create_user(
-    user: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]
-):
-    return await create_google_user(user, db)
-
-
 @router.get("/getUserSettings", name="get_user_settings")
+@limiter.limit("2/minute")
 async def get_user_settings(
     current_user: models.User = Depends(get_current_user),
 ):
@@ -30,6 +25,7 @@ async def get_user_settings(
 
 
 @router.patch("/updateSettings", name="update_profile_setting")
+@limiter.limit("10/minute")
 async def update_profile_setting(
     payload: UserSettings,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -50,6 +46,7 @@ async def update_profile_setting(
 
 
 @router.post("/deleteUser", name="delete_user")
+@limiter.limit("2/minute")
 async def delete_user(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
