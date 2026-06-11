@@ -16,7 +16,7 @@ async def send_digest_email(to_email: str, topic: str, content: str, digest_id: 
     html_content = markdown.markdown(content)
     try:
         params = {
-            "from": "Acme <onboarding@resend.dev>",
+            "from": "Dropread <digest@dropread.site>",
             "to": [to_email],
             "subject": f"Your digest: {topic}",
             "html": f"""
