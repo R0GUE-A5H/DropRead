@@ -18,6 +18,10 @@ RUN uv pip install --system --no-cache \
         --extra-index-url https://download.pytorch.org/whl/cpu \
         .
 
+RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; \
+SentenceTransformer('BAAI/bge-small-en-v1.5'); \
+CrossEncoder('BAAI/bge-reranker-base', device='cpu')"
+
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN python -m playwright install chromium \
     && python -m playwright install-deps chromium \
