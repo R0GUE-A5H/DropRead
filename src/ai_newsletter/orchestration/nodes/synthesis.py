@@ -24,7 +24,7 @@ async def synthesis_node(state: GraphState):
         return {"synthesis_summary": "No content available"}
 
     synth_chain = summarization_prompt | llm
-    synthesized_summary = synth_chain.ainvoke(
+    synthesized_summary = await synth_chain.ainvoke(
         {
             "original_topic": state["topic"],
             "validated_contents": "\n\n".join(validated_list),
