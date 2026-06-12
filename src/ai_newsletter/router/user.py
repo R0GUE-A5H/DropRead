@@ -2,16 +2,18 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
-from resend import templates
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.database.engine import get_db
 from src.ai_newsletter.database.schemas import UserSettings
 from src.ai_newsletter.models import models
+from src.ai_newsletter.router.digests import TEMPLATE_DIR
 from src.ai_newsletter.services.auth import get_current_user
 from src.ai_newsletter.utils.limiter import limiter
 
 router = APIRouter()
+templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
 @router.get("/getUserSettings", name="get_user_settings")

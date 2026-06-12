@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="referrer" content="no-referrer-when-downgrade">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DropRead | Stay sharp on anything.</title>
+    <title>DropRead | Your weekly briefing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -124,11 +124,12 @@
                         Your topic. Researched. Delivered.
                     </div>
                     <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 mb-8 leading-[1.1]">
-                        Stay sharp <br><span class="text-slate-400 italic font-medium font-serif">on anything.</span>
+                        Your weekly briefing <br><span class="text-slate-400 italic font-medium font-serif">on what
+                            matters.</span>
                     </h1>
                     <p class="text-lg text-slate-500 leading-relaxed mb-12 max-w-2xl">
-                        Tell us what you're curious about. We research it weekly across dozens of sources and send you
-                        what actually matters — no noise, no feeds to manage.
+                        Enter what you need to stay on top of we search the web, read the actual pages, and write the
+                        digest ourselves.
                     </p>
                     <form hx-post="{{request.url_for('submit_text')}}" hx-swap="none" class="max-w-2xl group"
                         x-on:open-auth-modal.window="modalOpen = true">
@@ -146,8 +147,8 @@
                     </form>
 
                     <div class="mt-16 flex flex-wrap gap-8 text-sm text-slate-400">
-                        <span>✓ Delivered every Monday</span>
-                        <span>✓ Reads across 10+ sources</span>
+                        <span>✓ Reads and writes</span>
+                        <span>✓ Delivered on your schedule </span>
                         <span>✓ Free to start</span>
                     </div>
                 </div>
@@ -159,27 +160,33 @@
                         <div class="lg:col-span-5">
                             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] mb-6">How it works
                             </h2>
-                            <h3 class="text-3xl font-bold text-slate-900 mb-6 leading-tight">We do the reading. You get
-                                the insight.</h3>
+                            <h3 class="text-3xl font-bold text-slate-900 mb-6 leading-tight">We read the pages. Then we
+                                write something worth reading.</h3>
                             <p class="text-slate-500 text-base leading-relaxed mb-8">
-                                We search dozens of sources, throw out anything shallow or off-topic, and write you a
-                                digest that actually says something. No filler, no link dumps.
+                                We search Google, crawl the actual articles, throw out anything shallow or off-topic,
+                                then write a proper digest from
+                                what's left.
                             </p>
                             <div class="space-y-4">
                                 <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
                                     <div class="h-2 w-2 rounded-full bg-slate-900"></div>
-                                    <span class="text-xs font-bold text-slate-700">Searches 40+ sources per topic, every
-                                        week</span>
+                                    <span class="text-xs font-bold text-slate-700">Searches Google fresh every week —
+                                        not a curated list</span>
                                 </div>
                                 <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
                                     <div class="h-2 w-2 rounded-full bg-slate-900"></div>
-                                    <span class="text-xs font-bold text-slate-700">Filters out low-quality and off-topic
-                                        results</span>
+                                    <span class="text-xs font-bold text-slate-700">Crawls and reads the full pages, not
+                                        just headlines</span>
                                 </div>
                                 <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
                                     <div class="h-2 w-2 rounded-full bg-slate-900"></div>
-                                    <span class="text-xs font-bold text-slate-700">Lands in your inbox every Monday at
-                                        8am</span>
+                                    <span class="text-xs font-bold text-slate-700">Filters and ranks content before
+                                        writing — low-signal sources get dropped</span>
+                                </div>
+                                <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                    <div class="h-2 w-2 rounded-full bg-slate-900"></div>
+                                    <span class="text-xs font-bold text-slate-700">Lands in your inbox on the day and
+                                        time you pick</span>
                                 </div>
                             </div>
                         </div>
@@ -196,16 +203,15 @@
                                 </div>
                             </div>
                             <div class="font-mono text-[11px] space-y-3">
-                                <p class="text-slate-500">[08:00:01] Searching across 40+ sources...</p>
-                                <p class="text-slate-300 pl-4">> Found 18 articles. Reading them now.</p>
-                                <p class="text-slate-500">[08:00:09] <span class="text-green-400">12 sources passed
-                                        quality check.</span></p>
-                                <p class="text-slate-300 pl-4">> Discarded 6 results — off-topic or low quality.</p>
+                                <p class="text-slate-500">[08:00:01] Searching Google for fresh results...</p>
+                                <p class="text-slate-300 pl-4">> Found 18 pages. Reading them now.</p>
+                                <p class="text-slate-500">[08:00:09] <span class="text-green-400">12 pages passed
+                                        relevance check.</span></p>
+                                <p class="text-slate-300 pl-4">> Dropped 6 — off-topic or too shallow.</p>
                                 <p class="text-yellow-500">[08:00:14] Writing your digest...</p>
                                 <div class="flex gap-2 text-slate-100">
                                     <span class="animate-pulse">_</span>
-                                    <span>Done. Sending to <a href="/cdn-cgi/l/email-protection" class="__cf_email__"
-                                            data-cfemail="4e2f3d263927200e29232f2722602d2123">[email&#160;protected]</a>
+                                    <span>Done. Sending to [email&#160;protected]
                                         ✓</span>
                                 </div>
                             </div>
@@ -218,8 +224,8 @@
 
     <footer class="py-12 bg-white border-t border-slate-50">
         <div class="max-w-7xl mx-auto px-6 text-center">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">DropRead — Weekly research
-                digests, built for curious people // 2026</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">DROPREAD — WE READ IT. YOU DON'T
+                HAVE TO.</p>
         </div>
     </footer>
 

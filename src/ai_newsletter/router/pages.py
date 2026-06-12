@@ -67,7 +67,7 @@ async def view_digest(
 
     return templates.TemplateResponse(
         request=request,
-        name="final_read.html",
+        name="digest.html",
         context={
             "request": request,
             "user": user,

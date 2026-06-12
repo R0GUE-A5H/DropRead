@@ -27,6 +27,6 @@ def verify_csrf(request: Request, csrf_token: str | None = Cookie(None)):
         if (
             not csrf_token
             or not header_token
-            or secrets.compare_digest(csrf_token, header_token)
+            or not secrets.compare_digest(csrf_token, header_token)
         ):
             raise HTTPException(status_code=403, detail="CSRF token missing or invalid")
