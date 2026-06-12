@@ -91,7 +91,7 @@ async def init_pipeline(
             .where(models.Digest.id == digest.id)
             .values(
                 status="running",
-                current_step="🔄 Resuming from last checkpoint...",
+                current_step="Resuming from last checkpoint...",
                 content="",
             )
         )

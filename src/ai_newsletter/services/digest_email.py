@@ -24,9 +24,6 @@ async def send_digest_email(to_email: str, topic: str, content: str, digest_id: 
                     <h1 style="font-size:24px;margin-bottom:24px;">{topic}</h1>
                     {html_content}
                     <hr style="margin-top:40px;border:none;border-top:1px solid #e2e8f0;">
-                    <p style="font-size:11px;color:#94a3b8;">
-                        <a href="{settings.app_url}/digest/{digest_id}">View online</a>
-                    </p>
                 </body></html>
             """,
         }

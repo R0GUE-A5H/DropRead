@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import uuid
 from typing import Annotated
 
@@ -64,6 +65,12 @@ async def view_digest(
     web_info = digest.extra_data or []
     source_count = len(web_info)
     read_time = estimate_read_time(digest.content)
+    
+    for source in web_info:
+        if "url" in source:
+            source["domain"] = urlparse(source["url"]).netloc
+        else:
+            source["domain"] = ""
 
     return templates.TemplateResponse(
         request=request,

@@ -50,6 +50,7 @@ async def rerank_node(state: GraphState):
     def _score():
         return _get_reranker().predict(pairs)
 
+    await update_status(state, "running", "Validating content...")
     loop = asyncio.get_running_loop()
     scores = await loop.run_in_executor(None, _score)
 

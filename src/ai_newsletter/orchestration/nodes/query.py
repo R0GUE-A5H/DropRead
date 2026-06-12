@@ -7,5 +7,5 @@ from src.ai_newsletter.utils.shared import update_status
 async def generate_search_query(state: GraphState) -> dict:
     await update_status(state, "running", "Generating search query...")
     chain = system_prompt_serper | llm
-    response = chain.invoke({"user_topic": state["topic"]})
+    response = await chain.ainvoke({"user_topic": state["topic"]})
     return {"generated_query": response.content}

@@ -289,7 +289,7 @@ async def node_web_crawl(state: GraphState) -> dict:
         await update_status(state, "running", "No URLs to crawl")
         return {"state_result_page": {}}
 
-    await update_status(state, "running", "Crawling sources...")
+    await update_status(state, "running", "Crawling Internet...")
 
     try:
         result_pages = await asyncio.wait_for(
