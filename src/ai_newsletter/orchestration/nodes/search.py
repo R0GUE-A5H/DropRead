@@ -1,5 +1,7 @@
 import logging
+
 import httpx
+
 from src.ai_newsletter.core.config import get_settings
 from src.ai_newsletter.orchestration.states import GraphState
 from src.ai_newsletter.utils.shared import update_status

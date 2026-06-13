@@ -1,13 +1,18 @@
+# ruff: noqa: E402
+import logging
 import os
 
-from src.ai_newsletter.services.auth import get_current_user
+from src.ai_newsletter.utils.logging_config import setup_logging
 
-# os.environ["TRANSFORMERS_OFFLINE"] = "1"
-# os.environ["HF_HUB_OFFLINE"] = "1"
+_is_production = os.getenv("APP_ENV") == "production"
+if _is_production:
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+    os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
+setup_logging()
+logger = logging.getLogger(__name__)
 import asyncio
-import logging
 import sys
 from contextlib import asynccontextmanager
 
@@ -24,19 +29,11 @@ from src.ai_newsletter.database.engine import async_session, engine
 from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.orchestration.graph import init_pipeline, pool
 from src.ai_newsletter.router import auth, digests, pages, pipeline, user
+from src.ai_newsletter.services.auth import get_current_user
 from src.ai_newsletter.services.scheduler import run_scheduled_digests
 from src.ai_newsletter.utils.dependencies import settings, verify_csrf
 from src.ai_newsletter.utils.limiter import limiter
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
-logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
-logging.getLogger("transformers").setLevel(logging.WARNING)
-_is_production = os.getenv("APP_ENV") == "production"
-
+from src.ai_newsletter.utils.metrics import MetricsMiddleware
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -81,6 +78,7 @@ def create_app() -> FastAPI:
         o.strip() for o in settings.allowed_origins.split(",") if o.strip()
     ]
 
+    app.add_middleware(MetricsMiddleware)
     app.add_middleware(
         SessionMiddleware,
         secret_key=settings.SECRET_KEY,

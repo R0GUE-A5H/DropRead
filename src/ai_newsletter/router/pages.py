@@ -1,6 +1,6 @@
-from urllib.parse import urlparse
 import uuid
 from typing import Annotated
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
@@ -65,7 +65,7 @@ async def view_digest(
     web_info = digest.extra_data or []
     source_count = len(web_info)
     read_time = estimate_read_time(digest.content)
-    
+
     for source in web_info:
         if "url" in source:
             source["domain"] = urlparse(source["url"]).netloc

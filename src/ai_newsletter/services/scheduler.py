@@ -38,7 +38,7 @@ def next_delivery_dt(delivery_day: str, delivery_time: str) -> datetime:
 
 async def run_scheduled_digests():
     now = datetime.utcnow()
-    logger.info(f"Scheduler running at {now}")
+    logger.debug(f"Scheduler running at {now}")
 
     async with async_session() as db:
         result = await db.execute(
@@ -62,7 +62,7 @@ async def run_scheduled_digests():
             for d, u in result.all()
         ]
 
-    logger.info(f"Found {len(due)} digests due")
+    logger.debug(f"Found {len(due)} digests due")
 
     for item in due:
         try:
