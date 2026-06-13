@@ -50,14 +50,28 @@ jobs:
     needs: build-base
     steps:
       - uses: actions/checkout@v4
-
       - name: Install uv
         uses: astral-sh/setup-uv@v4
-
       - name: Install dependencies
         run: uv sync --group dev
-
       - name: Run tests
+        env:
+          APP_ENV: test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: test
+          SECRET_KEY: test-secret-key-for-ci-only
+          GROQ_API_KEY: test
+          SERPER_API_KEY: test
+          RESEND_API_KEY: test
+          GOOGLE_CLIENT_ID: test
+          GOOGLE_CLIENT_SECRET: test
+          APP_URL: http://localhost:8000
+          ALLOWED_ORIGINS: http://localhost:8000
+          TRANSFORMERS_OFFLINE: "0"
+          HF_HUB_OFFLINE: "0"
         run: uv run pytest tests/ -v --tb=short
 
   deploy:
