@@ -136,14 +136,3 @@ async def init_pipeline(
     await db.refresh(digest)
     background_tasks.add_task(create_digest, topic, str(digest.id))
     return new_response(digest)
-
-
-# @router.post("/scheduler/run")
-# async def trigger_scheduler_run(
-#     request: Request,
-#     x_scheduler_secret: Annotated[str | None, Header()] = None,
-# ):
-#     if x_scheduler_secret != settings.SECRET_KEY:
-#         raise HTTPException(status_code=403, detail="Forbidden")
-#     await run_scheduled_digests()
-#     return {"status": "ok"}

@@ -1,3 +1,4 @@
+import os
 import secrets
 from pathlib import Path
 
@@ -22,6 +23,8 @@ oauth.register(
 
 
 def verify_csrf(request: Request, csrf_token: str | None = Cookie(None)):
+    if os.getenv("APP_ENV") != "production":
+        return
     if request.method in ("POST", "PUT", "DELETE", "PATCH"):
         header_token = request.headers.get("X-CSRF-Token")
         if (

@@ -7,7 +7,11 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.database.engine import get_db
-from src.ai_newsletter.services.digest import get_digest_by_id, get_digests
+from src.ai_newsletter.services.digest import (
+    get_digest_by_id,
+    get_digests_per_topic,
+    get_past_digests_by_topic,
+)
 from src.ai_newsletter.utils.dependencies import templates
 from src.ai_newsletter.utils.shared import estimate_read_time
 
@@ -30,7 +34,7 @@ async def dashboard(request: Request, db: Annotated[AsyncSession, Depends(get_db
     topic = request.query_params.get("topic", "")
     if not user:
         return RedirectResponse(url=request.url_for("login_google"))
-    all_digests = await get_digests(db, str(user["id"]))
+    all_digests = await get_digests_per_topic(db, str(user["id"]))
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
@@ -72,6 +76,19 @@ async def view_digest(
         else:
             source["domain"] = ""
 
+    past_digests_raw = await get_past_digests_by_topic(
+        db, user_id=str(user["id"]), current_digest_id=digest.id, topic=digest.title
+    )
+
+    previous_digests = [
+        {
+            "id": p.id,
+            "created_at": p.created_at,
+            "read_time": estimate_read_time(p.content),
+        }
+        for p in past_digests_raw
+    ]
+
     return templates.TemplateResponse(
         request=request,
         name="digest.html",
@@ -82,5 +99,6 @@ async def view_digest(
             "web_info": web_info,
             "source": source_count,
             "read_time": read_time,
+            "previous_digests": previous_digests,
         },
     )

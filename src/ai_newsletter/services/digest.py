@@ -85,3 +85,33 @@ async def get_digest_by_id(
     stmt = select(Digest).where(Digest.id == digest_id).where(Digest.user_id == user_id)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
+
+
+async def get_digests_per_topic(db: AsyncSession, user_id: str):
+    stmt = (
+        select(Digest)
+        .where(Digest.user_id == uuid.UUID(user_id))
+        .distinct(Digest.title)
+        .order_by(Digest.title, Digest.created_at.asc())
+    )
+    result = await db.execute(stmt)
+    digests = result.scalars().all()
+
+    return sorted(digests, key=lambda d: d.created_at, reverse=True)
+
+
+async def get_past_digests_by_topic(
+    db: AsyncSession, user_id: str, topic: str, current_digest_id: uuid.UUID
+):
+    stmt = (
+        select(Digest)
+        .where(
+            Digest.user_id == uuid.UUID(user_id),
+            Digest.title == topic,
+            Digest.id != current_digest_id,
+            Digest.status == "ready",
+        )
+        .order_by(Digest.created_at.desc())
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()

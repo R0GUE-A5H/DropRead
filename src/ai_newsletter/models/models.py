@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import DateTime, ForeignKey, String, Text, Uuid, func, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -40,9 +40,7 @@ class Digest(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    next_delivery: Mapped[datetime] = mapped_column(
-        server_default=text("NOW() + INTERVAL '7 days'")
-    )
+    next_delivery: Mapped[datetime | None] = mapped_column(nullable=True)
     delivery_time: Mapped[str] = mapped_column(String, nullable=False, default="08:00")
     delivery_day: Mapped[str] = mapped_column(String, nullable=False, default="Monday")
     extra_data: Mapped[list[dict] | None] = mapped_column(JSONB)

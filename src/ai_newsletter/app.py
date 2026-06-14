@@ -93,6 +93,17 @@ def create_app() -> FastAPI:
         allow_credentials=True,
     )
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
+    # @app.post("/api/scheduler/run")
+    # async def trigger_scheduler_run(
+    #     request: Request,
+    #     x_scheduler_secret: Annotated[str | None, Header()] = None,
+    # ):
+    #     if x_scheduler_secret != settings.SECRET_KEY:
+    #         raise HTTPException(status_code=403, detail="Forbidden")
+    #     await run_scheduled_digests()
+    #     return {"status": "ok"}
+
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(

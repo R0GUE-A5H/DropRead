@@ -54,6 +54,7 @@ async def run_scheduled_digests():
         due = [
             {
                 "id": d.id,
+                "user_id": d.user_id,
                 "title": d.title,
                 "delivery_day": d.delivery_day,
                 "delivery_time": d.delivery_time,
@@ -66,14 +67,36 @@ async def run_scheduled_digests():
 
     for item in due:
         try:
-            await create_digest(item["title"], str(item["id"]), skip_cache=True)
+            async with async_session() as db:
+                new_digest = Digest(
+                    user_id=item["user_id"],
+                    title=item["title"],
+                    content="",
+                    status="running",
+                    auto_digest=False,  # we keep just once instane to True
+                    # delivery_day=item["delivery_day"],
+                    # delivery_time=item["delivery_time"],
+                    # next_delivery=next_delivery_dt(
+                    #     item["delivery_day"], item["delivery_time"]
+                    # ),
+                )
+                db.add(new_digest)
+                await db.commit()
+                await db.refresh(new_digest)
+                new_digest_id = str(new_digest.id)
+
+            await create_digest(item["title"], new_digest_id, skip_cache=True)
 
             async with async_session() as db:
-                result = await db.execute(select(Digest).where(Digest.id == item["id"]))
+                result = await db.execute(
+                    select(Digest).where(Digest.id == new_digest_id)
+                )
                 fresh = result.scalar_one_or_none()
 
             if not fresh or fresh.status != "ready":
-                logger.error(f"Digest {item['id']} not ready after pipeline, skipping")
+                logger.error(
+                    f"Digest {new_digest_id} not ready after pipeline, skipping"
+                )
                 continue
 
             await send_digest_email(
@@ -82,6 +105,14 @@ async def run_scheduled_digests():
                 content=fresh.content,
                 digest_id=str(fresh.id),
             )
+
+            async with async_session() as db:
+                await db.execute(
+                    update(Digest)
+                    .where(Digest.id == fresh.id)
+                    .values(current_step="Emailed")
+                )
+                await db.commit()
 
             async with async_session() as db:
                 await db.execute(
