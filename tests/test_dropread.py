@@ -96,19 +96,12 @@ class TestSemanticCache:
         else:
             row = MagicMock()
             row.similarity = similarity
-            row.digest_id = uuid.UUID("094091b6-2282-4ad7-87e2-b8331b862949")
             row.topic = "python programming"
-            r1 = MagicMock()
-            r1.first.return_value = row
-
-            digest = MagicMock()
-            digest.id = row.digest_id
-            digest.content = "Summary about Python"
-            digest.extra_data = [{"url": "https://example.com"}]
-            r2 = MagicMock()
-            r2.scalar_one_or_none.return_value = digest
-
-            mock_db.execute.side_effect = [r1, r2]
+            row.content = "Summary about Python"
+            row.extra_data = [{"url": "https://example.com"}]
+            r = MagicMock()
+            r.first.return_value = row
+            mock_db.execute.return_value = r
 
         return mock_db
 
@@ -129,7 +122,8 @@ class TestSemanticCache:
 
             result = await get_cached_digest("python tutorial")
         assert result is not None
-        assert result["digest_id"] == "094091b6-2282-4ad7-87e2-b8331b862949"
+        assert result["content"] == "Summary about Python"
+        assert result["cached_topic"] == "python programming"
 
     @pytest.mark.asyncio
     async def test_miss_below_threshold(self):
