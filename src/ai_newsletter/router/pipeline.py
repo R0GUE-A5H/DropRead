@@ -11,8 +11,9 @@ from fastapi import (
     Request,
     Response,
 )
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import src.ai_newsletter.models.models as models
@@ -99,31 +100,31 @@ async def init_pipeline(
         await db.refresh(digest)
         background_tasks.add_task(create_digest, topic, str(digest.id))
         return existing_response(digest)
+    count_stmt = select(func.count(models.Digest.title.distinct())).where(
+        models.Digest.user_id == uuid.UUID(user["id"])
+    )
+    total_topics = (await db.execute(count_stmt)).scalar()
 
+    if total_topics >= 3:
+        logger.warning(f"User hit topic limit: {user['id']}")
+        response = HTMLResponse("")
+        response.headers["HX-Trigger"] = "topic-limit-reached"
+        return response
     cached = await get_cached_digest(topic)
     if cached:
         logger.info(f">>> Cache hit ({cached['similarity']}) for: {topic}")
-        source_result = await db.execute(
-            select(models.Digest).where(
-                models.Digest.id == uuid.UUID(cached["digest_id"])
-            )
+        new_digest = models.Digest(
+            content=cached["content"],
+            extra_data=cached["extra_data"],
+            user_id=uuid.UUID(user["id"]),
+            title=topic,
+            status="ready",
         )
-        source_digest = source_result.scalar_one_or_none()
-
-        if source_digest:
-            new_digest = models.Digest(
-                content=source_digest.content,
-                extra_data=source_digest.extra_data,
-                user_id=uuid.UUID(user["id"]),
-                title=topic,
-                status="ready",
-            )
-            db.add(new_digest)
-            await db.commit()
-            await db.refresh(new_digest)
-            logger.info(f">>> Created from cache: {new_digest.id}")
-            return new_response(new_digest)
-
+        db.add(new_digest)
+        await db.commit()
+        await db.refresh(new_digest)
+        logger.info(f">>> Created from cache: {new_digest.id}")
+        return new_response(new_digest)
     logger.info(">>> Creating NEW digest")
     digest = models.Digest(
         content="",

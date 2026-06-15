@@ -173,3 +173,25 @@ async def router_get_subscription_status(
 ):
     result = await get_subscription_status(request, digest_id, db)
     return result
+
+
+@router.delete("/{digest_id}", name="delete_digest")
+@limiter.limit("10/minute")
+async def delete_digest(
+    request: Request,
+    digest_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: models.User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Digest).where(
+            Digest.id == digest_id,
+            Digest.user_id == current_user.id,
+        )
+    )
+    digest = result.scalar_one_or_none()
+    if not digest:
+        raise HTTPException(status_code=404, detail="Digest not found")
+    await db.delete(digest)
+    await db.commit()
+    return Response(status_code=200)

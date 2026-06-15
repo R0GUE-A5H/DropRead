@@ -23,8 +23,9 @@ async def get_cached_digest(topic: str, threshold: float = 0.82):
 
     async with async_session() as db:
         stmt = text("""
-        SELECT digest_id, topic, 1 - (topic_embedding <=> :vec) AS similarity
+        SELECT content, extra_data, topic, 1 - (topic_embedding <=> :vec) AS similarity
         FROM digest_cache
+        WHERE created_at > NOW() - INTERVAL '7 days'
         ORDER BY topic_embedding <=> :vec
         LIMIT 1
         """)
@@ -32,33 +33,34 @@ async def get_cached_digest(topic: str, threshold: float = 0.82):
         row = result.first()
 
         if row and row.similarity >= threshold:
-            digest_stmt = select(Digest).where(
-                Digest.id == row.digest_id, Digest.status == "ready"
-            )
-
-            digest = (await db.execute(digest_stmt)).scalar_one_or_none()
-
-            if digest:
-                logger.info(f"Cache hit ({row.similarity:.3f}) for: {topic}")
-                return {
-                    "digest_id": str(digest.id),
-                    "content": digest.content,
-                    "extra_data": digest.extra_data,
-                    "cached_topic": row.topic,
-                    "similarity": round(row.similarity, 3),
-                }
+            logger.info(f"Cache hit ({row.similarity:.3f}) for: {topic}")
+            return {
+                "content": row.content,
+                "extra_data": row.extra_data,
+                "cached_topic": row.topic,
+                "similarity": round(row.similarity, 3),
+            }
         return None
 
 
 async def save_to_cache(topic: str, digest_id: str):
     vec = _get_embedder().encode(topic, normalize_embeddings=True).tolist()
-
     async with async_session() as db:
+        result = await db.execute(
+            select(Digest).where(Digest.id == uuid.UUID(digest_id))
+        )
+        digest = result.scalar_one_or_none()
+        if not digest or not digest.content:
+            logger.warning(
+                f"save_to_cache: digest {digest_id} not found or empty, skipping"
+            )
+            return
         await db.execute(
             DigestCache.__table__.insert().values(
                 topic=topic,
                 topic_embedding=vec,
-                digest_id=uuid.UUID(digest_id),
+                content=digest.content,
+                extra_data=digest.extra_data,
             )
         )
         await db.commit()

@@ -48,14 +48,11 @@ class Digest(Base):
 
 class DigestCache(Base):
     __tablename__ = "digest_cache"
-
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     topic: Mapped[str] = mapped_column(Text, nullable=False)
     topic_embedding: Mapped[Vector] = mapped_column(Vector(384), nullable=False)
-    digest_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("digests.id", ondelete="CASCADE"), nullable=False
-    )
-
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    extra_data: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

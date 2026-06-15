@@ -128,4 +128,15 @@ async def run_scheduled_digests():
 
         except Exception as e:
             logger.error(f"Scheduler failed for {item['id']}: {e}")
+            async with async_session() as db:
+                await db.execute(
+                    update(Digest)
+                    .where(Digest.id == item["id"])
+                    .values(
+                        next_delivery=next_delivery_dt(
+                            item["delivery_day"], item["delivery_time"]
+                        )
+                    )
+                )
+                await db.commit()
             continue

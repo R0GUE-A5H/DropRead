@@ -26,6 +26,11 @@
             ...options,
             headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json', ...options.headers }
         });
+
+        document.addEventListener("topic-limit-reached", function (evt) {
+            alert("You have reached the free plan limit of 3 topics!\n\nDelete an existing topic.");
+            window.dispatchEvent(new CustomEvent('digest-done'));
+        });
     </script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
@@ -61,6 +66,11 @@
         ::-webkit-scrollbar-thumb {
             background: #e2e8f0;
             border-radius: 10px;
+        }
+
+        tr.htmx-swapping {
+            opacity: 0;
+            transition: opacity 400ms ease-out;
         }
     </style>
 </head>
