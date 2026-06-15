@@ -236,12 +236,10 @@
                             </p>
                         </div>
                         <div class="flex items-center gap-3 flex-shrink-0">
-                            <form method="POST" action="{{request.url_for('delete_user')}}">
-                                <button type="submit"
-                                    class="px-4 py-2 bg-red-600 text-white text-xs font-black rounded-lg hover:bg-red-700 transition uppercase tracking-widest">
-                                    Yes, delete
-                                </button>
-                            </form>
+                            <button @click="deleteAccount()"
+                                class="px-4 py-2 bg-red-600 text-white text-xs font-black rounded-lg hover:bg-red-700 transition uppercase tracking-widest">
+                                Yes, delete
+                            </button>
                             <button @click="showDeleteConfirm = false"
                                 class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition">
                                 Cancel
@@ -325,6 +323,18 @@
 
                 discard() {
                     this.current = { ...this.saved }
+                },
+                async deleteAccount() {
+                    try {
+                        const res = await window.csrfFetch('{{request.url_for("delete_user")}}', {
+                            method: 'POST'
+                        });
+                        if (res.ok || res.redirected) {
+                            window.location.href = '/';
+                        }
+                    } catch (error) {
+                        console.error('Error deleting account:', error);
+                    }
                 }
             }
         }
