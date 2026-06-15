@@ -4,9 +4,11 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.database.engine import get_db
+from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.services.digest import (
     get_digest_by_id,
     get_digests_per_topic,
@@ -66,6 +68,41 @@ async def view_digest(
     if not digest:
         return RedirectResponse(url=request.url_for("dashboard"))
 
+    if request.query_params.get("latest") == "true":
+        stmt = (
+            select(Digest)
+            .where(
+                Digest.user_id == uuid.UUID(user["id"]),
+                Digest.title == digest.title,
+                Digest.status == "ready",
+            )
+            .order_by(Digest.created_at.desc())
+        )
+        latest_digest = (await db.execute(stmt)).scalars().first()
+
+        if latest_digest and latest_digest.id != digest.id:
+            return RedirectResponse(
+                url=request.url_for("view_digest", digest_id=latest_digest.id)
+            )
+
+    is_archive = digest.current_step == "Emailed"
+    parent_digest_id = None
+
+    if is_archive:
+        parent_stmt = (
+            select(Digest)
+            .where(
+                Digest.user_id == uuid.UUID(user["id"]),
+                Digest.title == digest.title,
+                Digest.current_step != "Emailed",
+            )
+            .order_by(Digest.created_at.desc())
+        )
+
+        parent = (await db.execute(parent_stmt)).scalar_one_or_none()
+        if parent:
+            parent_digest_id = str(parent.id)
+
     web_info = digest.extra_data or []
     source_count = len(web_info)
     read_time = estimate_read_time(digest.content)
@@ -100,5 +137,7 @@ async def view_digest(
             "source": source_count,
             "read_time": read_time,
             "previous_digests": previous_digests,
+            "parent_digest_id": parent_digest_id,
+            "is_archive": is_archive,
         },
     )

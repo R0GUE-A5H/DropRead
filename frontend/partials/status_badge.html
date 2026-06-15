@@ -105,7 +105,7 @@
     <td class="pl-6 pr-10 py-8 text-right">
         <div
             class="flex items-center justify-end gap-4 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity duration-300">
-            <a href="{{ request.url_for('view_digest', digest_id=item.id) }}"
+            <a href="{{ request.url_for('view_digest', digest_id=item.id) }}?latest=true"
                 class="text-[11px] font-black text-indigo-600 hover:text-indigo-900 uppercase tracking-[0.2em] transition underline decoration-2 underline-offset-8">
                 Read
             </a>

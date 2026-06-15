@@ -1,12 +1,29 @@
+import logging
+import uuid
+
+from sqlalchemy import select
+
 from src.ai_newsletter.core.llm import llm
+from src.ai_newsletter.database.engine import async_session
+from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.orchestration.prompts import summarization_prompt
 from src.ai_newsletter.orchestration.state_manager import update_digest_status
 from src.ai_newsletter.orchestration.states import GraphState
 from src.ai_newsletter.utils.shared import update_status
 
+logger = logging.getLogger(__name__)
+
 
 async def synthesis_node(state: GraphState):
-    # print("-------Starting synthesis of validated content------")
+    async with async_session() as db:
+        digest_exists = await db.execute(
+            select(Digest.id).where(Digest.id == uuid.UUID(state["digest_id"]))
+        )
+        if not digest_exists.scalar_one_or_none():
+            logger.warning(
+                f"Kill switch: Digest {state['digest_id']} deleted. Halting synthesis."
+            )
+            raise RuntimeError("Digest deleted by user. Halting to save LLM tokens.")
 
     crawled_data = state.get("state_result_page", {})
 
@@ -30,7 +47,7 @@ async def synthesis_node(state: GraphState):
             "validated_contents": "\n\n".join(validated_list),
         }
     )
-    # print("Synthesis completed. Generated newsletter summary.")
+
     await update_status(state, "running", "Synthesis complete.")
     return {
         "synthesis_summary": synthesized_summary.content,

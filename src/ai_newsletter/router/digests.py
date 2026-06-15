@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_newsletter.core.config import get_settings
@@ -190,8 +190,13 @@ async def delete_digest(
         )
     )
     digest = result.scalar_one_or_none()
+
     if not digest:
         raise HTTPException(status_code=404, detail="Digest not found")
-    await db.delete(digest)
+    await db.execute(
+        delete(Digest).where(
+            Digest.user_id == current_user.id, Digest.title == digest.title
+        )
+    )
     await db.commit()
     return Response(status_code=200)
