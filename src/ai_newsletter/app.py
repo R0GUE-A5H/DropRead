@@ -93,7 +93,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         allow_credentials=False if not _is_production else True,
     )
-    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1"])
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
     # @app.post("/api/scheduler/run")
     # async def trigger_scheduler_run(
