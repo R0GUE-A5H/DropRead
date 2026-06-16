@@ -98,6 +98,7 @@ async def view_digest(
                 Digest.current_step != "Emailed",
             )
             .order_by(Digest.created_at.desc())
+            .limit(1)
         )
 
         parent = (await db.execute(parent_stmt)).scalar_one_or_none()
