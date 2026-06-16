@@ -57,6 +57,7 @@ async def view_digest(
 ):
     user = request.session.get("user")
     if not user:
+        request.session["next"] = f"/digests/{digest_id}"
         return RedirectResponse(url=request.url_for("login_google"))
 
     digest = await get_digest_by_id(

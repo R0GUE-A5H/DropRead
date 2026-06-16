@@ -2,7 +2,6 @@ import asyncio
 import logging
 import random
 import re
-import select
 import sys
 import uuid
 from collections import defaultdict
@@ -12,6 +11,7 @@ import curl_cffi
 import trafilatura
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
+from sqlalchemy import select
 
 from src.ai_newsletter.database.engine import async_session
 from src.ai_newsletter.models.models import Digest

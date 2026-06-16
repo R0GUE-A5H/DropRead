@@ -56,7 +56,7 @@ async def create_digest(topic: str, digest_id: str, skip_cache: bool = False):
         await save_to_cache(topic, digest_id)
 
     except Exception as e:
-        logger.error(f">>> BG TASK FAILED: {digest_id} - {e}")
+        logger.error(f">>> BG TASK FAILED: {digest_id} - {e}", exc_info=True)
         async with async_session() as db:
             await db.execute(
                 update(Digest)

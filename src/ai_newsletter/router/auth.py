@@ -50,7 +50,11 @@ async def auth_google_callback(
         "picture": db_user.profile_picture,
     }
 
-    if topic:
+    next_url = request.session.pop("next", None)
+
+    if next_url and next_url.startswith("/digests/"):
+        redirect_url = next_url
+    elif topic:
         redirect_url = f"{request.url_for('dashboard')}?{urlencode({'topic': topic})}"
     else:
         redirect_url = "/"

@@ -4,11 +4,10 @@ settings = get_settings()
 
 
 async def run_pipeline(topic: str, digest_id: str) -> dict:
-    from src.ai_newsletter.orchestration.graph import pipeline
+    from src.ai_newsletter.orchestration import graph
 
     config = {"configurable": {"thread_id": digest_id}}
-
-    return await pipeline.ainvoke(
+    return await graph.pipeline.ainvoke(
         {
             "topic": topic,
             "digest_id": digest_id,

@@ -32,4 +32,4 @@ async def send_digest_email(to_email: str, topic: str, content: str, digest_id: 
         )
         logger.info(f"Email sent to {to_email} for digest {digest_id}")
     except Exception as e:
-        logger.error(f"Failed to send email for {digest_id}: {e}")
+        logger.error(f"Failed to send email for {digest_id}: {e}", exc_info=True)

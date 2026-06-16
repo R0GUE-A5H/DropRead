@@ -2,6 +2,7 @@
 import logging
 import os
 
+from src.ai_newsletter.router import digest_router
 from src.ai_newsletter.utils.logging_config import setup_logging
 
 _is_production = os.getenv("APP_ENV") == "production"
@@ -28,7 +29,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from src.ai_newsletter.database.engine import async_session, engine
 from src.ai_newsletter.models.models import Digest
 from src.ai_newsletter.orchestration.graph import init_pipeline, pool
-from src.ai_newsletter.router import auth, digests, pages, pipeline, user
+from src.ai_newsletter.router import auth, digests, pages, user
 from src.ai_newsletter.services.auth import get_current_user
 from src.ai_newsletter.services.scheduler import run_scheduled_digests
 from src.ai_newsletter.utils.dependencies import settings, verify_csrf
@@ -90,9 +91,9 @@ def create_app() -> FastAPI:
         allow_origins=["*"] if not _is_production else allowed_origins,
         allow_methods=["*"],
         allow_headers=["*"],
-        allow_credentials=True,
+        allow_credentials=False if not _is_production else True,
     )
-    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1"])
 
     # @app.post("/api/scheduler/run")
     # async def trigger_scheduler_run(
@@ -101,8 +102,58 @@ def create_app() -> FastAPI:
     # ):
     #     if x_scheduler_secret != settings.SECRET_KEY:
     #         raise HTTPException(status_code=403, detail="Forbidden")
-    #     await run_scheduled_digests()
-    #     return {"status": "ok"}
+
+    #     # grab any ready digest + user
+    #     async with async_session() as db:
+    #         result = await db.execute(
+    #             select(Digest, User)
+    #             .join(User, Digest.user_id == User.id)
+    #             .where(Digest.status == "ready")
+    #             .limit(1)
+    #         )
+    #         row = result.first()
+
+    #     if not row:
+    #         return {"status": "no ready digest found"}
+
+    #     d, u = row
+    #     new_digest_id = str(uuid.uuid4())
+
+    #     async with async_session() as db:
+    #         new_digest = Digest(
+    #             id=uuid.UUID(new_digest_id),
+    #             user_id=d.user_id,
+    #             title=d.title,
+    #             content="",
+    #             status="running",
+    #             auto_digest=False,
+    #         )
+    #         db.add(new_digest)
+    #         await db.commit()
+
+    #     await create_digest(d.title, new_digest_id, skip_cache=True)
+
+    #     async with async_session() as db:
+    #         result = await db.execute(
+    #             select(Digest).where(Digest.id == uuid.UUID(new_digest_id))
+    #         )
+    #         fresh = result.scalar_one_or_none()
+
+    #     if not fresh or fresh.status != "ready":
+    #         return {"status": "pipeline failed", "digest_id": new_digest_id}
+
+    #     await send_digest_email(
+    #         to_email=u.email,
+    #         topic=fresh.title,
+    #         content=fresh.content,
+    #         digest_id=str(fresh.id),
+    #     )
+    #     return {
+    #         "status": "sent",
+    #         "to": u.email,
+    #         "topic": fresh.title,
+    #         "digest_id": new_digest_id,
+    #     }
 
     app.include_router(auth.router)
     app.include_router(pages.router)
@@ -117,7 +168,7 @@ def create_app() -> FastAPI:
         dependencies=[Depends(get_current_user), Depends(verify_csrf)],
     )
     app.include_router(
-        pipeline.router,
+        digest_router.router,
         prefix="/api/pipeline",
         dependencies=[Depends(get_current_user), Depends(verify_csrf)],
     )

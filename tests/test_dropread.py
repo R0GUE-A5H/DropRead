@@ -178,7 +178,7 @@ from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
 
 def make_test_app():
     app = FastAPI()
-    from src.ai_newsletter.router.pipeline import router  # noqa: E402
+    from src.ai_newsletter.router.digest_router import router  # noqa: E402
 
     app.include_router(router, prefix="/api/pipeline")
     app.add_middleware(SessionMiddleware, secret_key="test-secret-key")

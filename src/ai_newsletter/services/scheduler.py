@@ -127,7 +127,7 @@ async def run_scheduled_digests():
                 await db.commit()
 
         except Exception as e:
-            logger.error(f"Scheduler failed for {item['id']}: {e}")
+            logger.error(f"Scheduler failed for {item['id']}: {e}", exc_info=True)
             async with async_session() as db:
                 await db.execute(
                     update(Digest)
