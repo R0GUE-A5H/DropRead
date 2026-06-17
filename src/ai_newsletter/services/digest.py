@@ -110,6 +110,7 @@ async def get_past_digests_by_topic(
             Digest.title == topic,
             Digest.id != current_digest_id,
             Digest.status == "ready",
+            Digest.current_step == "Emailed",
         )
         .order_by(Digest.created_at.desc())
     )

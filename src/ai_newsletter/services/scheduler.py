@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
@@ -68,6 +69,17 @@ async def run_scheduled_digests():
     for item in due:
         try:
             async with async_session() as db:
+                await db.execute(
+                    update(Digest)
+                    .where(Digest.id == item["id"])
+                    .values(
+                        next_delivery=next_delivery_dt(
+                            item["delivery_day"], item["delivery_time"]
+                        )
+                    )
+                )
+                await db.commit()
+            async with async_session() as db:
                 new_digest = Digest(
                     user_id=item["user_id"],
                     title=item["title"],
@@ -89,7 +101,7 @@ async def run_scheduled_digests():
 
             async with async_session() as db:
                 result = await db.execute(
-                    select(Digest).where(Digest.id == new_digest_id)
+                    select(Digest).where(Digest.id == uuid.UUID(new_digest_id))
                 )
                 fresh = result.scalar_one_or_none()
 
@@ -97,6 +109,13 @@ async def run_scheduled_digests():
                 logger.error(
                     f"Digest {new_digest_id} not ready after pipeline, skipping"
                 )
+                async with async_session() as db:
+                    await db.execute(
+                        update(Digest)
+                        .where(Digest.id == uuid.UUID(new_digest_id))
+                        .values(status="failed", current_step="Scheduled run failed")
+                    )
+                    await db.commit()
                 continue
 
             await send_digest_email(
