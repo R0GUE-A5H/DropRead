@@ -35,7 +35,7 @@ async def dashboard(request: Request, db: Annotated[AsyncSession, Depends(get_db
     user = request.session.get("user")
     topic = request.query_params.get("topic", "")
     if not user:
-        return RedirectResponse(url=request.url_for("login_google"))
+        return RedirectResponse(url=request.url_for("home"))
     all_digests = await get_digests_per_topic(db, str(user["id"]))
     return templates.TemplateResponse(
         request=request,

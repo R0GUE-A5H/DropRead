@@ -50,7 +50,7 @@ def build_graph(cp: AsyncPostgresSaver):
 async def init_pipeline():
     """Call this once inside the lifespan, after the event loop is running."""
     global checkpointer, pipeline
-    await pool.open()
+    # await pool.open()
     checkpointer = AsyncPostgresSaver(pool)
     await checkpointer.setup()
     pipeline = build_graph(checkpointer)

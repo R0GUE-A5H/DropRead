@@ -3,6 +3,7 @@ import logging
 import os
 
 from src.ai_newsletter.router import digest_router
+from src.ai_newsletter.utils.csrf import generate_csrf_token, set_csrf_cookie
 from src.ai_newsletter.utils.logging_config import setup_logging
 
 _is_production = os.getenv("APP_ENV") == "production"
@@ -18,7 +19,7 @@ import sys
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -154,6 +155,16 @@ def create_app() -> FastAPI:
     #         "topic": fresh.title,
     #         "digest_id": new_digest_id,
     #     }
+    @app.middleware("http")
+    async def ensure_csrf_cookie(request: Request, call_next):
+        response = await call_next(request)
+        if (
+            request.method == "GET"
+            and "text/html" in response.headers.get("content-type", "")
+            and not request.cookies.get("csrf_token")
+        ):
+            set_csrf_cookie(response, generate_csrf_token())
+        return response
 
     app.include_router(auth.router)
     app.include_router(pages.router)
