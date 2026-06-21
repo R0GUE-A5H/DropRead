@@ -25,7 +25,7 @@ async def get_cached_digest(topic: str, threshold: float = 0.82):
         stmt = text("""
         SELECT content, extra_data, topic, 1 - (topic_embedding <=> :vec) AS similarity
         FROM digest_cache
-        WHERE created_at > NOW() - INTERVAL '7 days'
+        WHERE created_at > NOW() - INTERVAL '3 days'
         ORDER BY topic_embedding <=> :vec
         LIMIT 1
         """)
