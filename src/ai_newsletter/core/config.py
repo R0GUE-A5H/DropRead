@@ -30,6 +30,7 @@ class Settings(BaseSettings):
 
     google_client_id: str
     google_client_secret: str
+    resend_from_email: str = "onboarding@resend.dev"
 
     app_name: str = "Newsletter AI Digest"
     log_level: str = "INFO"
